@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dịch vụ tiện ích - {{chungcuName}}</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #17a2b8, #138496);
+      color: white;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    
+    .header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      font-size: 1.1em;
+      opacity: 0.9;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 50px 20px;
+    }
+    
+    .breadcrumb {
+      margin-bottom: 30px;
+      color: #666;
+    }
+    
+    .breadcrumb a {
+      color: #17a2b8;
+      text-decoration: none;
+    }
+    
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+    
+    .section-title {
+      text-align: center;
+      font-size: 2em;
+      color: #333;
+      margin-bottom: 50px;
+      font-weight: bold;
+    }
+    
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-bottom: 50px;
+    }
+    
+    .service-card {
+      background: white;
+      border-radius: 15px;
+      padding: 40px 30px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+      border-top: 4px solid #17a2b8;
+    }
+    
+    .service-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+    
+    .service-card.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .service-card.disabled:hover {
+      transform: none;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .service-icon {
+      font-size: 4em;
+      margin-bottom: 20px;
+      color: #17a2b8;
+    }
+    
+    .service-title {
+      font-size: 1.4em;
+      color: #333;
+      margin-bottom: 15px;
+      font-weight: bold;
+    }
+    
+    .service-description {
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    
+    .service-status {
+      font-size: 0.9em;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-weight: bold;
+    }
+    
+    .status-available {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .status-coming-soon {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    .service-categories {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 40px;
+      margin-bottom: 50px;
+    }
+    
+    .category-section {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .category-title {
+      font-size: 1.5em;
+      color: #333;
+      margin-bottom: 20px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+    }
+    
+    .category-title .icon {
+      font-size: 1.5em;
+      margin-right: 15px;
+      color: #17a2b8;
+    }
+    
+    .category-services {
+      display: grid;
+      gap: 15px;
+    }
+    
+    .category-service {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 15px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .category-service:hover {
+      border-color: #17a2b8;
+      background: #e9f7fd;
+    }
+    
+    .category-service.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .category-service.disabled:hover {
+      border-color: #e9ecef;
+      background: #f8f9fa;
+    }
+    
+    .category-service-title {
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 5px;
+    }
+    
+    .category-service-desc {
+      color: #666;
+      font-size: 0.9em;
+    }
+    
+    .info-section {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+    
+    .info-section h3 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 1.5em;
+    }
+    
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    
+    .info-item {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .info-item-icon {
+      font-size: 2.5em;
+      color: #17a2b8;
+      margin-bottom: 10px;
+    }
+    
+    .info-item-title {
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 5px;
+    }
+    
+    .info-item-desc {
+      color: #666;
+      font-size: 0.9em;
+    }
+    
+    @media (max-width: 768px) {
+      .services-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .service-categories {
+        grid-template-columns: 1fr;
+      }
+      
+      .header h1 {
+        font-size: 2em;
+      }
+      
+      .section-title {
+        font-size: 1.5em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Dịch Vụ Tiện Ích</h1>
+    <p>Các dịch vụ tiện ích tại {{chungcuName}}</p>
+  </div>
+  
+  <div class="container">
+    <div class="breadcrumb">
+      <a href="/tenants">Trang chủ</a> > Dịch vụ tiện ích
+    </div>
+    
+    <h2 class="section-title">Danh Sách Dịch Vụ Tiện Ích</h2>
+    
+    <div class="services-grid">
+      <div class="service-card" onclick="window.location.href='/tenants/utility-services/access-card'">
+        <div class="service-icon">🎫</div>
+        <div class="service-title">Thẻ Tiện Ích</div>
+        <div class="service-description">Đăng ký thẻ truy cập các tiện ích chung như gym, hồ bơi, sân thể thao</div>
+        <div class="service-status status-available">Đang hoạt động</div>
+      </div>
+      
+      <div class="service-card" onclick="window.location.href='/tenants/utility-services/transport'">
+        <div class="service-icon">🚚</div>
+        <div class="service-title">Dịch Vụ Vận Chuyển</div>
+        <div class="service-description">Đăng ký dịch vụ vận chuyển hàng hóa, chuyển nhà, giao hàng</div>
+        <div class="service-status status-available">Đang hoạt động</div>
+      </div>
+      
+      <div class="service-card" onclick="window.location.href='/tenants/utility-services/construction'">
+        <div class="service-icon">🔨</div>
+        <div class="service-title">Dịch Vụ Thi Công</div>
+        <div class="service-description">Đăng ký các dịch vụ thi công, sửa chữa, cải tạo căn hộ</div>
+        <div class="service-status status-available">Đang hoạt động</div>
+      </div>
+      
+      <div class="service-card" onclick="window.location.href='/tenants/utility-services/guest-registration'">
+        <div class="service-icon">👥</div>
+        <div class="service-title">Đăng Ký Khách</div>
+        <div class="service-description">Đăng ký khách tham quan, khách ở lại qua đêm</div>
+        <div class="service-status status-available">Đang hoạt động</div>
+      </div>
+      
+      <div class="service-card" onclick="window.location.href='/tenants/utility-services/maintenance'">
+        <div class="service-icon">🔧</div>
+        <div class="service-title">Bảo Trì Căn Hộ</div>
+        <div class="service-description">Yêu cầu bảo trì, sửa chữa các vấn đề trong căn hộ</div>
+        <div class="service-status status-available">Đang hoạt động</div>
+      </div>
+      
+      <div class="service-card" onclick="window.location.href='/tenants/utility-services/contact-management'">
+        <div class="service-icon">📞</div>
+        <div class="service-title">Liên Hệ Quản Lý</div>
+        <div class="service-description">Gửi yêu cầu, phản hồi, khiếu nại tới ban quản lý</div>
+        <div class="service-status status-available">Đang hoạt động</div>
+      </div>
+      
+      <div class="service-card disabled">
+        <div class="service-icon">🏠</div>
+        <div class="service-title">Dịch Vụ Gia Đình</div>
+        <div class="service-description">Giúp việc nhà, trông trẻ, chăm sóc người già</div>
+        <div class="service-status status-coming-soon">Sắp ra mắt</div>
+      </div>
+      
+      <div class="service-card disabled">
+        <div class="service-icon">🛒</div>
+        <div class="service-title">Dịch Vụ Mua Sắm</div>
+        <div class="service-description">Đặt hàng online, giao hàng tận nơi</div>
+        <div class="service-status status-coming-soon">Sắp ra mắt</div>
+      </div>
+    </div>
+    
+    <div class="service-categories">
+      <div class="category-section">
+        <h3 class="category-title">
+          <span class="icon">🏢</span>
+          Dịch Vụ Cơ Sở Hạ Tầng
+        </h3>
+        <div class="category-services">
+          <div class="category-service" onclick="window.location.href='/tenants/utility-services/access-card'">
+            <div class="category-service-title">Thẻ Tiện Ích</div>
+            <div class="category-service-desc">Gym, hồ bơi, sân thể thao</div>
+          </div>
+          <div class="category-service" onclick="window.location.href='/tenants/utility-services/maintenance'">
+            <div class="category-service-title">Bảo Trì</div>
+            <div class="category-service-desc">Sửa chữa, bảo trì căn hộ</div>
+          </div>
+          <div class="category-service disabled">
+            <div class="category-service-title">Tiện Ích Khác</div>
+            <div class="category-service-desc">Sắp ra mắt</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="category-section">
+        <h3 class="category-title">
+          <span class="icon">🚛</span>
+          Dịch Vụ Logistics
+        </h3>
+        <div class="category-services">
+          <div class="category-service" onclick="window.location.href='/tenants/utility-services/transport'">
+            <div class="category-service-title">Vận Chuyển</div>
+            <div class="category-service-desc">Chuyển nhà, giao hàng</div>
+          </div>
+          <div class="category-service" onclick="window.location.href='/tenants/utility-services/construction'">
+            <div class="category-service-title">Thi Công</div>
+            <div class="category-service-desc">Sửa chữa, cải tạo</div>
+          </div>
+          <div class="category-service disabled">
+            <div class="category-service-title">Giao Hàng</div>
+            <div class="category-service-desc">Sắp ra mắt</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="category-section">
+        <h3 class="category-title">
+          <span class="icon">👨‍👩‍👧‍👦</span>
+          Dịch Vụ Cộng Đồng
+        </h3>
+        <div class="category-services">
+          <div class="category-service" onclick="window.location.href='/tenants/utility-services/guest-registration'">
+            <div class="category-service-title">Đăng Ký Khách</div>
+            <div class="category-service-desc">Khách tham quan, ở lại</div>
+          </div>
+          <div class="category-service" onclick="window.location.href='/tenants/utility-services/contact-management'">
+            <div class="category-service-title">Liên Hệ Quản Lý</div>
+            <div class="category-service-desc">Phản hồi, khiếu nại</div>
+          </div>
+          <div class="category-service disabled">
+            <div class="category-service-title">Hoạt Động Cộng Đồng</div>
+            <div class="category-service-desc">Sắp ra mắt</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="info-section">
+      <h3>Thông Tin Dịch Vụ</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-item-icon">⏰</div>
+          <div class="info-item-title">Thời Gian Xử Lý</div>
+          <div class="info-item-desc">1-3 ngày làm việc</div>
+        </div>
+        
+        <div class="info-item">
+          <div class="info-item-icon">📱</div>
+          <div class="info-item-title">Hỗ Trợ Online</div>
+          <div class="info-item-desc">24/7 qua website</div>
+        </div>
+        
+        <div class="info-item">
+          <div class="info-item-icon">🔒</div>
+          <div class="info-item-title">Bảo Mật</div>
+          <div class="info-item-desc">Thông tin được bảo vệ</div>
+        </div>
+        
+        <div class="info-item">
+          <div class="info-item-icon">✅</div>
+          <div class="info-item-title">Xác Thực</div>
+          <div class="info-item-desc">Chữ ký điện tử</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

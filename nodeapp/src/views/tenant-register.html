@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Đăng ký dịch vụ</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #8B5CF6, #A855F7);
+      color: white;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    
+    .header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      font-size: 1.1em;
+      opacity: 0.9;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 50px 20px;
+    }
+    
+    .section-title {
+      text-align: center;
+      font-size: 2em;
+      color: #333;
+      margin-bottom: 50px;
+      font-weight: bold;
+    }
+    
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-bottom: 50px;
+    }
+    
+    .service-card {
+      background: white;
+      border-radius: 15px;
+      padding: 40px 30px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .service-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+    
+    .service-icon {
+      font-size: 3em;
+      margin-bottom: 20px;
+      color: #8B5CF6;
+    }
+    
+    .service-title {
+      font-size: 1.3em;
+      color: #333;
+      margin-bottom: 15px;
+      font-weight: bold;
+    }
+    
+    .service-description {
+      color: #666;
+      line-height: 1.6;
+    }
+    
+    @media (max-width: 768px) {
+      .services-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .header h1 {
+        font-size: 2em;
+      }
+      
+      .section-title {
+        font-size: 1.5em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Chào mừng đến với Cổng Thông Tin Cư Dân</h1>
+    <p>Nơi bạn có thể đăng ký quản lý các dịch vụ và thông tin quan trọng của chung cư.</p>
+  </div>
+  
+  <div class="container">
+    <h2 class="section-title">Các Dịch Vụ Chính</h2>
+    
+    <div class="services-grid">
+      <div class="service-card" onclick="window.location.href='/tenants/car-registration'">
+        <div class="service-icon">🚗</div>
+        <div class="service-title">Dịch Vụ Thẻ Xe</div>
+        <div class="service-description">Đăng ký thẻ xe máy, ô tô đỗ tại chung cư</div>
+      </div>
+      
+      <div class="service-card" onclick="window.location.href='/tenants/utility-services'">
+        <div class="service-icon">🏢</div>
+        <div class="service-title">Dịch Vụ Tiện Ích</div>
+        <div class="service-description">Thẻ tiện ích, vận chuyển, thi công, bảo trì căn hộ</div>
+      </div>
+      
+      <div class="service-card" onclick="window.location.href='/tenants/utility-card'">
+        <div class="service-icon">💳</div>
+        <div class="service-title">Đăng Ký Thẻ Khác</div>
+        <div class="service-description">Đăng ký thẻ cư dân, thẻ truy cập, thẻ gia đình ...</div>
+      </div>
+      
+      <div class="service-card" onclick="window.location.href='/tenants/moving-service'">
+        <div class="service-icon">🚚</div>
+        <div class="service-title">Đăng Ký Vận Chuyển Hàng Hóa</div>
+        <div class="service-description">Yêu cầu vận chuyển hàng hóa, dọn nhà, chuyển đồ đạc...</div>
+      </div>
+      
+      <div class="service-card" onclick="window.location.href='/tenants/construction'">
+        <div class="service-icon">🏗️</div>
+        <div class="service-title">Đăng Ký Thi Công</div>
+        <div class="service-description">Đăng ký các công việc sửa chữa, cải tạo, trang sức nhà...</div>
+      </div>
+      
+      <div class="service-card" onclick="window.location.href='/tenants/contact-admin'">
+        <div class="service-icon">🎧</div>
+        <div class="service-title">Liên Hệ Ban Quản Lý</div>
+        <div class="service-description">Gửi yêu cầu hỗ trợ hoặc liên hệ trực tiếp ban quản lý</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

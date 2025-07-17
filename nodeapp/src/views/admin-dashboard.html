@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+  <style>
+    body { background: #f3f4f6; font-family: 'Inter', Arial, sans-serif; margin: 0; }
+    .dashboard-layout { display: flex; min-height: 100vh; }
+    .sidebar {
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      width: 240px;
+      background: linear-gradient(180deg,#7C3AED 80%,#a78bfa 100%);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      padding: 0;
+      box-shadow: 2px 0 16px rgba(0,0,0,0.08);
+      z-index: 100;
+      transition: width 0.2s;
+    }
+    .sidebar.collapsed { width: 64px; }
+    .sidebar-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 28px 24px 18px 24px;
+    }
+    .sidebar-title { font-size: 1.5em; font-weight: 700; letter-spacing: 1px; white-space: nowrap; transition: opacity 0.2s; }
+    .sidebar.collapsed .sidebar-title { opacity: 0; width: 0; overflow: hidden; }
+    .sidebar-toggle {
+      background: none; border: none; color: #fff; font-size: 1.3em; cursor: pointer; margin-left: 8px;
+      transition: color 0.2s;
+    }
+    .sidebar-menu { list-style: none; padding: 0; margin: 0; }
+    .sidebar-menu li { margin-bottom: 6px; }
+    .sidebar-menu a {
+      color: #fff; text-decoration: none; display: flex; align-items: center; gap: 14px; padding: 14px 28px; border-left: 4px solid transparent; border-radius: 0 24px 24px 0; transition: background 0.2s, border 0.2s;
+      font-size: 1.08em; font-weight: 600;
+    }
+    .sidebar-menu a.active, .sidebar-menu a:hover { background: #6d28d9; border-left: 4px solid #fff; }
+    .sidebar.collapsed .sidebar-menu a span { display: none; }
+    .sidebar.collapsed .sidebar-menu a { justify-content: center; padding: 14px 0; }
+    .sidebar-menu .submenu {
+      list-style: none; padding-left: 32px; margin: 0;
+      background: rgba(255,255,255,0.04);
+      border-radius: 0 0 0 16px;
+    }
+    .sidebar-menu .submenu a { font-size: 0.98em; padding: 10px 18px; }
+    .logout-btn { margin: 32px 24px 24px 24px; background: #dc3545; color: #fff; border: none; border-radius: 8px; padding: 14px 0; font-size: 17px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .logout-btn:hover { background: #b71c1c; }
+    .main-content {
+      margin-left: 240px;
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      transition: margin-left 0.2s;
+    }
+    .sidebar.collapsed ~ .main-content { margin-left: 64px; }
+    .main-header {
+      background: #fff;
+      border-bottom: 2px solid #8B5CF6;
+      padding: 28px 40px 18px 40px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .main-header h1 { color: #7C3AED; font-size: 2.1em; margin: 0; font-weight: 700; letter-spacing: 1px; }
+    .main-area { flex: 1; padding: 36px 40px 40px 40px; background: #fff; border-radius: 0 0 20px 20px; box-shadow: 0 8px 32px rgba(124,92,246,0.10); min-height: 80vh; }
+    .main-footer { text-align: right; color: #888; font-size: 0.98em; padding: 18px 40px 10px 0; background: none; }
+    .section-title {
+      font-size: 1.8em;
+      font-weight: 700;
+      margin: 0 0 24px 0;
+      color: #7C3AED;
+      border-bottom: 2px solid #8B5CF6;
+      padding-bottom: 8px;
+    }
+    .search-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .search-box input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1em;
+      margin-right: 12px;
+    }
+    .search-box button {
+      background: #7C3AED;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 12px 24px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .search-box button:hover {
+      background: #6d28d9;
+    }
+    .tenant-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+    }
+    .tenant-table th, .tenant-table td {
+      padding: 12px 16px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    .tenant-table th {
+      background: #f9f9f9;
+      font-weight: 700;
+    }
+    .tenant-table tbody tr:hover {
+      background: #f1f1f1;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 500px;
+      position: relative;
+    }
+    .modal-content h3 {
+      margin: 0 0 16px 0;
+      font-size: 1.5em;
+      color: #333;
+    }
+    .modal-content .form-group {
+      margin-bottom: 16px;
+    }
+    .modal-content .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+    .modal-content .form-group input,
+    .modal-content .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1em;
+    }
+    .modal-content .error-msg {
+      color: #dc3545;
+      font-size: 0.9em;
+      margin-top: -8px;
+      margin-bottom: 12px;
+    }
+    @media (max-width: 900px) {
+      .dashboard-layout { flex-direction: column; }
+      .sidebar, .sidebar.collapsed { width: 100vw; min-height: unset; flex-direction: row; align-items: center; position: static; }
+      .sidebar-header { padding: 18px 10px 10px 10px; }
+      .sidebar-menu { display: flex; flex-direction: row; margin: 0; }
+      .sidebar-menu li { margin: 0 8px 0 0; }
+      .sidebar-menu a { padding: 10px 16px; font-size: 1em; border-radius: 0; }
+      .main-content, .sidebar.collapsed ~ .main-content { margin-left: 0; }
+      .main-header, .main-area { padding: 12px 4px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-layout">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title">Admin</span>
+        <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+      </div>
+      <ul class="sidebar-menu">
+        <li><a href="#" class="active" data-screen="tenants"><i class="fas fa-building"></i><span>Tài khoản tenant</span></a></li>
+        <li><a href="#" data-screen="users"><i class="fas fa-users"></i><span>Quản lý user</span></a></li>
+        <li><a href="#" data-screen="services"><i class="fas fa-cogs"></i><span>Dịch vụ tiện ích</span></a></li>
+        <li><a href="#" data-screen="service1"><i class="fas fa-concierge-bell"></i><span>Dịch vụ 1</span></a></li>
+        <li><a href="#" data-screen="service2"><i class="fas fa-concierge-bell"></i><span>Dịch vụ 2</span></a></li>
+        <li><a href="#" data-screen="service3"><i class="fas fa-concierge-bell"></i><span>Dịch vụ 3</span></a></li>
+        <li><a href="#" data-screen="service4"><i class="fas fa-concierge-bell"></i><span>Dịch vụ 4</span></a></li>
+        <li><a href="#" data-screen="service5"><i class="fas fa-concierge-bell"></i><span>Dịch vụ 5</span></a></li>
+      </ul>
+      <button class="logout-btn" onclick="logout()">Đăng xuất</button>
+    </nav>
+    <div class="main-content" id="mainContent">
+      <div class="main-header" id="mainHeader">
+        <h1 id="mainTitle">Quản lý tài khoản tenant</h1>
+      </div>
+      <div class="main-area" id="mainArea">
+        <!-- Nội dung từng màn hình sẽ được render ở đây -->
+      </div>
+      <div class="main-footer">&copy; 2025 Admin Dashboard</div>
+    </div>
+  </div>
+  <script>
+    // Sidebar toggle
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('collapsed');
+    }
+    // Menu click: highlight + load screen
+    document.querySelectorAll('.sidebar-menu a').forEach(a => {
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelectorAll('.sidebar-menu a').forEach(x => x.classList.remove('active'));
+        this.classList.add('active');
+        const screen = this.getAttribute('data-screen');
+        loadScreen(screen);
+      });
+    });
+    // Load screen content
+    function loadScreen(screen) {
+      const mainTitle = document.getElementById('mainTitle');
+      const mainArea = document.getElementById('mainArea');
+      if (screen === 'tenants') {
+        mainTitle.innerText = 'Quản lý tài khoản tenant';
+        mainArea.innerHTML = `
+          <div class="section-title">Quản lý tài khoản tenant</div>
+          <div class="search-box">
+            <input type="text" id="tenantSearch" placeholder="Tìm kiếm tên, mã tenant..." oninput="filterTenantTable()">
+            <button class="view-btn" onclick="openTenantModal()">+ Thêm tenant</button>
+          </div>
+          <table class="tenant-table" id="tenantTable">
+            <thead>
+              <tr><th>Tên chung cư</th><th>Mã tenant</th><th>Email</th><th>Trạng thái</th><th>Hành động</th></tr>
+            </thead>
+            <tbody id="tenantTableBody"></tbody>
+          </table>
+          <div id="tenantModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);z-index:1000;align-items:center;justify-content:center;">
+            <div class="modal-content">
+              <h3 id="tenantModalTitle" style="color:#7C3AED;font-size:1.3em;margin-bottom:18px;">Thêm tenant</h3>
+              <form id="tenantForm">
+                <input type="hidden" id="tenantId">
+                <div class="form-group"><label>Tên chung cư</label><input type="text" id="tenantName" required></div>
+                <div class="form-group"><label>Mã tenant</label><input type="text" id="tenantCode" required></div>
+                <div class="form-group"><label>Email</label><input type="email" id="tenantEmail" required></div>
+                <div class="form-group"><label>Trạng thái</label>
+                  <select id="tenantStatus">
+                    <option value="active">Hoạt động</option>
+                    <option value="inactive">Ngừng</option>
+                    <option value="locked">Khoá</option>
+                  </select>
+                </div>
+                <div class="error-msg" id="tenantError"></div>
+                <div style="display:flex;gap:12px;justify-content:flex-end;">
+                  <button type="button" class="view-btn" style="background:#e0e0e0;color:#333;" onclick="closeTenantModal()">Huỷ</button>
+                  <button type="submit" class="view-btn">Lưu</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        `;
+        // Gắn lại các hàm xử lý cho bảng tenant
+        setTimeout(() => { fetchTenants(); bindTenantForm(); }, 0);
+      } else if (screen === 'users') {
+        mainTitle.innerText = 'Quản lý user';
+        mainArea.innerHTML = `
+          <div class="section-title">Quản lý user</div>
+          <div class="search-box">
+            <input type="text" id="userSearch" placeholder="Tìm kiếm tên, tài khoản, email..." oninput="filterUserTable()">
+            <button class="view-btn" onclick="openUserModal()">+ Thêm user</button>
+          </div>
+          <table class="tenant-table" id="userTable">
+            <thead>
+              <tr><th>Tài khoản</th><th>Họ tên</th><th>Email</th><th>Mã tenant</th><th>Trạng thái</th><th>Hành động</th></tr>
+            </thead>
+            <tbody id="userTableBody"></tbody>
+          </table>
+          <div id="userModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);z-index:1000;align-items:center;justify-content:center;">
+            <div class="modal-content">
+              <h3 id="userModalTitle" style="color:#7C3AED;font-size:1.3em;margin-bottom:18px;">Thêm user</h3>
+              <form id="userForm">
+                <input type="hidden" id="userId">
+                <div class="form-group"><label>Tài khoản</label><input type="text" id="userUsername" required></div>
+                <div class="form-group"><label>Họ tên</label><input type="text" id="userName" required></div>
+                <div class="form-group"><label>Email</label><input type="email" id="userEmail" required></div>
+                <div class="form-group"><label>Mã tenant</label><input type="text" id="userTenantId" required></div>
+                <div class="form-group"><label>Trạng thái</label>
+                  <select id="userStatus">
+                    <option value="active">Hoạt động</option>
+                    <option value="inactive">Ngừng</option>
+                    <option value="locked">Khoá</option>
+                  </select>
+                </div>
+                <div class="form-group" id="userPasswordGroup"><label>Mật khẩu</label><input type="password" id="userPassword" required></div>
+                <div class="error-msg" id="userError"></div>
+                <div style="display:flex;gap:12px;justify-content:flex-end;">
+                  <button type="button" class="view-btn" style="background:#e0e0e0;color:#333;" onclick="closeUserModal()">Huỷ</button>
+                  <button type="submit" class="view-btn">Lưu</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        `;
+        setTimeout(() => { fetchUsers(); bindUserForm(); }, 0);
+      } else if (screen === 'services') {
+        mainTitle.innerText = 'Dịch vụ tiện ích';
+        mainArea.innerHTML = `
+          <div class="section-title">Quản lý đăng ký dịch vụ tiện ích</div>
+          <div class="search-box">
+            <input type="text" id="serviceRegSearch" placeholder="Tìm kiếm tên dịch vụ, loại đăng ký, tên người dùng, email, tenant..." oninput="filterServiceRegTable()">
+          </div>
+          <table class="tenant-table" id="serviceRegTable">
+            <thead>
+              <tr><th>Tên dịch vụ</th><th>Loại đăng ký</th><th>Người đăng ký</th><th>Email</th><th>Tenant</th><th>Thời gian đăng ký</th><th>Trạng thái</th><th>File</th></tr>
+            </thead>
+            <tbody id="serviceRegTableBody"></tbody>
+          </table>
+        `;
+        setTimeout(() => { fetchServiceRegistrations(); }, 0);
+      } else if (screen === 'service1') {
+        mainTitle.innerText = 'Dịch vụ 1';
+        mainArea.innerHTML = `<div class="section-title">Dịch vụ 1</div><div style="padding:24px 0;">Nội dung Dịch vụ 1. (Bổ sung logic sau)</div>`;
+      } else if (screen === 'service2') {
+        mainTitle.innerText = 'Dịch vụ 2';
+        mainArea.innerHTML = `<div class="section-title">Dịch vụ 2</div><div style="padding:24px 0;">Nội dung Dịch vụ 2. (Bổ sung logic sau)</div>`;
+      } else if (screen === 'service3') {
+        mainTitle.innerText = 'Dịch vụ 3';
+        mainArea.innerHTML = `<div class="section-title">Dịch vụ 3</div><div style="padding:24px 0;">Nội dung Dịch vụ 3. (Bổ sung logic sau)</div>`;
+      } else if (screen === 'service4') {
+        mainTitle.innerText = 'Dịch vụ 4';
+        mainArea.innerHTML = `<div class="section-title">Dịch vụ 4</div><div style="padding:24px 0;">Nội dung Dịch vụ 4. (Bổ sung logic sau)</div>`;
+      } else if (screen === 'service5') {
+        mainTitle.innerText = 'Dịch vụ 5';
+        mainArea.innerHTML = `<div class="section-title">Dịch vụ 5</div><div style="padding:24px 0;">Nội dung Dịch vụ 5. (Bổ sung logic sau)</div>`;
+      } else {
+        mainTitle.innerText = 'Admin Dashboard';
+        mainArea.innerHTML = `<div style="padding:24px 0;">Chọn một chức năng từ menu bên trái.</div>`;
+      }
+    }
+    // Đăng xuất
+    function logout() {
+      fetch('/admin/logout', { method: 'POST' }).then(() => {
+        window.location.href = '/admin/login';
+      });
+    }
+    // --- Tenant CRUD ---
+    async function fetchTenants() {
+      const res = await fetch('/admin/api/tenants');
+      const tenants = await res.json();
+      renderTenantTable(tenants);
+      window._tenants = tenants;
+    }
+    function renderTenantTable(tenants) {
+      const body = document.getElementById('tenantTableBody');
+      if (!body) return;
+      body.innerHTML = tenants.map(t => `
+        <tr>
+          <td>${t.name}</td>
+          <td>${t.tenant_id}</td>
+          <td>${t.email||''}</td>
+          <td>${t.status||'active'}</td>
+          <td>
+            <button class="view-btn" onclick="editTenant('${t._id}')">Sửa</button>
+            <button class="view-btn danger" onclick="deleteTenant('${t._id}')">Xoá</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+    function filterTenantTable() {
+      const val = document.getElementById('tenantSearch')?.value.toLowerCase() || '';
+      const rows = document.querySelectorAll('#tenantTableBody tr');
+      rows.forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(val) ? '' : 'none';
+      });
+    }
+    function openTenantModal(edit = false, tenant = null) {
+      document.getElementById('tenantModal').style.display = 'flex';
+      document.getElementById('tenantForm').reset();
+      document.getElementById('tenantError').innerText = '';
+      document.getElementById('tenantId').value = tenant && tenant._id ? tenant._id : '';
+      document.getElementById('tenantName').value = tenant && tenant.name ? tenant.name : '';
+      document.getElementById('tenantCode').value = tenant && tenant.tenant_id ? tenant.tenant_id : '';
+      document.getElementById('tenantEmail').value = tenant && tenant.email ? tenant.email : '';
+      document.getElementById('tenantStatus').value = tenant && tenant.status ? tenant.status : 'active';
+      document.getElementById('tenantModalTitle').innerText = edit ? 'Sửa tenant' : 'Thêm tenant';
+    }
+    function closeTenantModal() {
+      document.getElementById('tenantModal').style.display = 'none';
+    }
+    function bindTenantForm() {
+      document.getElementById('tenantForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const id = document.getElementById('tenantId').value;
+        const name = document.getElementById('tenantName').value.trim();
+        const tenant_id = document.getElementById('tenantCode').value.trim();
+        const email = document.getElementById('tenantEmail').value.trim();
+        const status = document.getElementById('tenantStatus').value;
+        let method = id ? 'PUT' : 'POST';
+        let url = '/admin/api/tenants' + (id ? '/' + id : '');
+        let body = { name, tenant_id, email, status };
+        try {
+          const res = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+          const data = await res.json();
+          if (data.success) {
+            closeTenantModal();
+            fetchTenants();
+          } else {
+            document.getElementById('tenantError').innerText = data.error || 'Lỗi!';
+          }
+        } catch (err) {
+          document.getElementById('tenantError').innerText = 'Lỗi kết nối!';
+        }
+      };
+    }
+    function editTenant(id) {
+      const tenant = (window._tenants||[]).find(t => t._id === id);
+      if (tenant) openTenantModal(true, tenant);
+    }
+    async function deleteTenant(id) {
+      if (!confirm('Xác nhận xoá tenant này?')) return;
+      const res = await fetch('/admin/api/tenants/' + id, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) fetchTenants();
+      else alert(data.error || 'Lỗi!');
+    }
+    // --- User CRUD ---
+    async function fetchUsers() {
+      const res = await fetch('/admin/api/tenant-users');
+      const users = await res.json();
+      renderUserTable(users);
+      window._users = users;
+    }
+    function renderUserTable(users) {
+      const body = document.getElementById('userTableBody');
+      if (!body) return;
+      body.innerHTML = users.map(u => `
+        <tr>
+          <td>${u.username}</td>
+          <td>${u.name}</td>
+          <td>${u.email}</td>
+          <td>${u.tenant_id}</td>
+          <td>${u.status}</td>
+          <td>
+            <button class="view-btn" onclick="editUser('${u._id}')">Sửa</button>
+            <button class="view-btn warn" onclick="resetUserPassword('${u._id}')">Reset mật khẩu</button>
+            <button class="view-btn danger" onclick="deleteUser('${u._id}')">Xoá</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+    function filterUserTable() {
+      const val = document.getElementById('userSearch')?.value.toLowerCase() || '';
+      const rows = document.querySelectorAll('#userTableBody tr');
+      rows.forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(val) ? '' : 'none';
+      });
+    }
+    function openUserModal(edit = false, user = null) {
+      document.getElementById('userModal').style.display = 'flex';
+      document.getElementById('userForm').reset();
+      document.getElementById('userError').innerText = '';
+      document.getElementById('userId').value = user && user._id ? user._id : '';
+      document.getElementById('userUsername').value = user && user.username ? user.username : '';
+      document.getElementById('userName').value = user && user.name ? user.name : '';
+      document.getElementById('userEmail').value = user && user.email ? user.email : '';
+      document.getElementById('userTenantId').value = user && user.tenant_id ? user.tenant_id : '';
+      document.getElementById('userStatus').value = user && user.status ? user.status : 'active';
+      document.getElementById('userPasswordGroup').style.display = edit ? 'none' : 'block';
+      document.getElementById('userModalTitle').innerText = edit ? 'Sửa user' : 'Thêm user';
+    }
+    function closeUserModal() {
+      document.getElementById('userModal').style.display = 'none';
+    }
+    function bindUserForm() {
+      document.getElementById('userForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const id = document.getElementById('userId').value;
+        const username = document.getElementById('userUsername').value.trim();
+        const name = document.getElementById('userName').value.trim();
+        const email = document.getElementById('userEmail').value.trim();
+        const tenant_id = document.getElementById('userTenantId').value.trim();
+        const status = document.getElementById('userStatus').value;
+        const password = document.getElementById('userPassword').value;
+        let method = id ? 'PUT' : 'POST';
+        let url = '/admin/api/tenant-users' + (id ? '/' + id : '');
+        let body = { username, name, email, tenant_id, status };
+        if (!id) body.password = password;
+        try {
+          const res = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+          const data = await res.json();
+          if (data.success) {
+            closeUserModal();
+            fetchUsers();
+          } else {
+            document.getElementById('userError').innerText = data.error || 'Lỗi!';
+          }
+        } catch (err) {
+          document.getElementById('userError').innerText = 'Lỗi kết nối!';
+        }
+      };
+    }
+    function editUser(id) {
+      const user = (window._users||[]).find(u => u._id === id);
+      if (user) openUserModal(true, user);
+    }
+    async function deleteUser(id) {
+      if (!confirm('Xác nhận xoá tài khoản này?')) return;
+      const res = await fetch('/admin/api/tenant-users/' + id, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) fetchUsers();
+      else alert(data.error || 'Lỗi!');
+    }
+    async function resetUserPassword(id) {
+      const password = prompt('Nhập mật khẩu mới:');
+      if (!password) return;
+      const res = await fetch('/admin/api/tenant-users/' + id + '/reset-password', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      const data = await res.json();
+      if (data.success) alert('Đã reset mật khẩu!');
+      else alert(data.error || 'Lỗi!');
+    }
+    // --- Service Registration ---
+    let _serviceRegs = [];
+    async function fetchServiceRegistrations() {
+      let url = '/admin/api/service-registrations';
+      const res = await fetch(url);
+      const regs = await res.json();
+      _serviceRegs = regs;
+      renderServiceRegTable(regs);
+    }
+    function renderServiceRegTable(regs) {
+      const body = document.getElementById('serviceRegTableBody');
+      if (!body) return;
+      body.innerHTML = regs.map(r => `
+        <tr>
+          <td>${r.service_name||''}</td>
+          <td>${r.registration_type||''}</td>
+          <td>${r.user_name||''}</td>
+          <td>${r.user_email||''}</td>
+          <td>${r.tenant_name||r.tenant_id||''}</td>
+          <td>${r.created_at ? new Date(r.created_at).toLocaleString() : ''}</td>
+          <td>${r.status||''}</td>
+          <td>${r.file_url ? `<a href="${r.file_url}" target="_blank">Tải file</a>` : ''}</td>
+        </tr>
+      `).join('');
+    }
+    function filterServiceRegTable() {
+      const val = document.getElementById('serviceRegSearch')?.value.toLowerCase() || '';
+      const rows = document.querySelectorAll('#serviceRegTableBody tr');
+      rows.forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(val) ? '' : 'none';
+      });
+    }
+    // Mặc định load màn hình đầu tiên
+    loadScreen('tenants');
+  </script>
+</body>
+</html>

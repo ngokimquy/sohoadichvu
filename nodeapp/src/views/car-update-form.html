@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Thay đổi thông tin xe - {{chungcuName}}</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      line-height: 1.6;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #8B5CF6, #A855F7);
+      color: white;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    
+    .header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      font-size: 1.1em;
+      opacity: 0.9;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 50px 20px;
+    }
+    
+    .breadcrumb {
+      margin-bottom: 30px;
+      color: #666;
+    }
+    
+    .breadcrumb a {
+      color: #8B5CF6;
+      text-decoration: none;
+    }
+    
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+    
+    .form-container {
+      background: white;
+      border-radius: 15px;
+      padding: 40px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .form-title {
+      text-align: center;
+      font-size: 2em;
+      color: #333;
+      margin-bottom: 30px;
+      font-weight: bold;
+    }
+    
+    .form-section {
+      margin-bottom: 30px;
+    }
+    
+    .section-title {
+      font-size: 1.3em;
+      color: #333;
+      margin-bottom: 20px;
+      font-weight: bold;
+      border-bottom: 2px solid #8B5CF6;
+      padding-bottom: 10px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #333;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s ease;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #8B5CF6;
+    }
+    
+    .form-group textarea {
+      height: 100px;
+      resize: vertical;
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    
+    .file-upload {
+      border: 2px dashed #8B5CF6;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    
+    .file-upload:hover {
+      background-color: #f8f9fa;
+    }
+    
+    .file-upload input {
+      display: none;
+    }
+    
+    .file-upload-icon {
+      font-size: 3em;
+      color: #8B5CF6;
+      margin-bottom: 10px;
+    }
+    
+    .file-upload-text {
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .info-card {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .info-card h4 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    .info-card p {
+      color: #666;
+      margin-bottom: 5px;
+    }
+    
+    .change-item {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .change-item h5 {
+      color: #856404;
+      margin-bottom: 10px;
+    }
+    
+    .change-comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    
+    .old-value, .new-value {
+      padding: 10px;
+      border-radius: 5px;
+    }
+    
+    .old-value {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .new-value {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .signature-pad {
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    
+    .signature-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: bold;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #8B5CF6, #A855F7);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(139, 92, 246, 0.4);
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+    
+    .btn-outline {
+      background: white;
+      color: #8B5CF6;
+      border: 2px solid #8B5CF6;
+    }
+    
+    .btn-outline:hover {
+      background: #8B5CF6;
+      color: white;
+    }
+    
+    .submit-btn {
+      width: 100%;
+      padding: 15px;
+      font-size: 18px;
+      margin-top: 20px;
+    }
+    
+    .alert {
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    
+    .alert-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .alert-error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .alert-info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    
+    @media (max-width: 768px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+      
+      .change-comparison {
+        grid-template-columns: 1fr;
+      }
+      
+      .header h1 {
+        font-size: 2em;
+      }
+      
+      .form-title {
+        font-size: 1.5em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Thay Đổi Thông Tin Xe</h1>
+    <p>{{chungcuName}}</p>
+  </div>
+  
+  <div class="container">
+    <div class="breadcrumb">
+      <a href="/tenants">Trang chủ</a> > <a href="/tenants/car-registration">Dịch vụ thẻ xe</a> > Thay đổi thông tin xe
+    </div>
+    
+    <div class="form-container">
+      <h2 class="form-title">Thay Đổi Thông Tin Xe</h2>
+      
+      <div class="alert alert-success" id="successAlert">
+        Yêu cầu thay đổi thông tin xe đã được gửi thành công!
+      </div>
+      
+      <div class="alert alert-error" id="errorAlert">
+        Có lỗi xảy ra. Vui lòng thử lại!
+      </div>
+      
+      <div class="alert alert-info" style="display: block;">
+        <strong>Lưu ý:</strong> Việc thay đổi thông tin xe sẽ cần được xác nhận bởi ban quản lý. Vui lòng cung cấp đầy đủ thông tin và tài liệu cần thiết.
+      </div>
+      
+      <form id="updateForm" enctype="multipart/form-data">
+        <div class="form-section">
+          <div class="section-title">Thông Tin Chủ Xe</div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="fullName">Họ và tên *</label>
+              <input type="text" id="fullName" name="fullName" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="cccd">Số CCCD/CMND *</label>
+              <input type="text" id="cccd" name="cccd" required>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="phone">Số điện thoại *</label>
+              <input type="tel" id="phone" name="phone" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="apartment">Số căn hộ *</label>
+              <input type="text" id="apartment" name="apartment" required>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-section">
+          <div class="section-title">Thông Tin Xe Hiện Tại</div>
+          
+          <div class="info-card">
+            <h4>Thông tin xe cũ (để tham khảo)</h4>
+            <p><strong>Biển số xe:</strong> <span id="oldLicensePlate">-</span></p>
+            <p><strong>Loại xe:</strong> <span id="oldVehicleType">-</span></p>
+            <p><strong>Hãng xe:</strong> <span id="oldBrand">-</span></p>
+            <p><strong>Màu xe:</strong> <span id="oldColor">-</span></p>
+          </div>
+          
+          <div class="form-group">
+            <label for="currentLicensePlate">Biển số xe hiện tại *</label>
+            <input type="text" id="currentLicensePlate" name="currentLicensePlate" required 
+                   placeholder="Nhập biển số xe hiện tại để xác nhận">
+          </div>
+        </div>
+        
+        <div class="form-section">
+          <div class="section-title">Thông Tin Xe Mới</div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="newLicensePlate">Biển số xe mới</label>
+              <input type="text" id="newLicensePlate" name="newLicensePlate" 
+                     placeholder="Để trống nếu không thay đổi">
+            </div>
+            
+            <div class="form-group">
+              <label for="newVehicleType">Loại xe mới</label>
+              <select id="newVehicleType" name="newVehicleType">
+                <option value="">Không thay đổi</option>
+                <option value="car">Xe ô tô</option>
+                <option value="motorcycle">Xe máy</option>
+                <option value="electric-bike">Xe đạp điện</option>
+                <option value="electric-motorcycle">Xe máy điện</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="newBrand">Hãng xe mới</label>
+              <input type="text" id="newBrand" name="newBrand" 
+                     placeholder="Để trống nếu không thay đổi">
+            </div>
+            
+            <div class="form-group">
+              <label for="newColor">Màu xe mới</label>
+              <input type="text" id="newColor" name="newColor" 
+                     placeholder="Để trống nếu không thay đổi">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="changeReason">Lý do thay đổi *</label>
+            <textarea id="changeReason" name="changeReason" required 
+                      placeholder="Vui lòng mô tả lý do thay đổi thông tin xe..."></textarea>
+          </div>
+        </div>
+        
+        <div class="form-section">
+          <div class="section-title">Tóm Tắt Thay Đổi</div>
+          
+          <div id="changesSummary">
+            <p>Các thay đổi sẽ được hiển thị ở đây khi bạn nhập thông tin mới.</p>
+          </div>
+        </div>
+        
+        <div class="form-section">
+          <div class="section-title">Tài Liệu Đính Kèm</div>
+          
+          <div class="form-group">
+            <label>Ảnh CCCD/CMND *</label>
+            <div class="file-upload" onclick="document.getElementById('cccdFile').click()">
+              <div class="file-upload-icon">📷</div>
+              <div class="file-upload-text">
+                <div>Chọn ảnh CCCD/CMND</div>
+                <small>Định dạng: JPG, PNG. Tối đa 5MB</small>
+              </div>
+              <input type="file" id="cccdFile" name="cccdFile" accept="image/*" required>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Ảnh đăng ký xe mới/cavet *</label>
+            <div class="file-upload" onclick="document.getElementById('cavetFile').click()">
+              <div class="file-upload-icon">📄</div>
+              <div class="file-upload-text">
+                <div>Chọn ảnh đăng ký xe/cavet</div>
+                <small>Định dạng: JPG, PNG. Tối đa 5MB</small>
+              </div>
+              <input type="file" id="cavetFile" name="cavetFile" accept="image/*" required>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Ảnh xe mới (nếu có)</label>
+            <div class="file-upload" onclick="document.getElementById('vehiclePhoto').click()">
+              <div class="file-upload-icon">🚗</div>
+              <div class="file-upload-text">
+                <div>Chọn ảnh xe</div>
+                <small>Định dạng: JPG, PNG. Tối đa 5MB</small>
+              </div>
+              <input type="file" id="vehiclePhoto" name="vehiclePhoto" accept="image/*">
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-section">
+          <div class="section-title">Chữ Ký Xác Nhận</div>
+          
+          <div class="signature-controls">
+            <label>Vui lòng ký tên để xác nhận thông tin *</label>
+            <button type="button" class="btn btn-outline" onclick="clearSignature()">Xóa chữ ký</button>
+          </div>
+          
+          <canvas id="signatureCanvas" class="signature-pad" width="400" height="200"></canvas>
+        </div>
+        
+        <button type="submit" class="btn btn-primary submit-btn">Gửi Yêu Cầu Thay Đổi</button>
+      </form>
+    </div>
+  </div>
+  
+  <script>
+    // Signature pad functionality
+    const canvas = document.getElementById('signatureCanvas');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+    let hasSignature = false;
+    
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+    
+    canvas.addEventListener('touchstart', startDrawing);
+    canvas.addEventListener('touchmove', draw);
+    canvas.addEventListener('touchend', stopDrawing);
+    
+    function startDrawing(e) {
+      isDrawing = true;
+      hasSignature = true;
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX || e.touches[0].clientX) - rect.left;
+      const y = (e.clientY || e.touches[0].clientY) - rect.top;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    }
+    
+    function draw(e) {
+      if (!isDrawing) return;
+      e.preventDefault();
+      
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX || e.touches[0].clientX) - rect.left;
+      const y = (e.clientY || e.touches[0].clientY) - rect.top;
+      
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#000';
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    }
+    
+    function stopDrawing() {
+      isDrawing = false;
+      ctx.beginPath();
+    }
+    
+    function clearSignature() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      hasSignature = false;
+    }
+    
+    // Update changes summary
+    function updateChangesSummary() {
+      const currentPlate = document.getElementById('currentLicensePlate').value;
+      const newPlate = document.getElementById('newLicensePlate').value;
+      const newType = document.getElementById('newVehicleType').value;
+      const newBrand = document.getElementById('newBrand').value;
+      const newColor = document.getElementById('newColor').value;
+      
+      const summaryDiv = document.getElementById('changesSummary');
+      let changesHtml = '';
+      
+      if (newPlate && newPlate !== currentPlate) {
+        changesHtml += `
+          <div class="change-item">
+            <h5>Biển số xe</h5>
+            <div class="change-comparison">
+              <div class="old-value">Cũ: ${currentPlate || '-'}</div>
+              <div class="new-value">Mới: ${newPlate}</div>
+            </div>
+          </div>
+        `;
+      }
+      
+      if (newType) {
+        const typeNames = {
+          'car': 'Xe ô tô',
+          'motorcycle': 'Xe máy',
+          'electric-bike': 'Xe đạp điện',
+          'electric-motorcycle': 'Xe máy điện'
+        };
+        changesHtml += `
+          <div class="change-item">
+            <h5>Loại xe</h5>
+            <div class="change-comparison">
+              <div class="old-value">Cũ: ${document.getElementById('oldVehicleType').textContent}</div>
+              <div class="new-value">Mới: ${typeNames[newType]}</div>
+            </div>
+          </div>
+        `;
+      }
+      
+      if (newBrand) {
+        changesHtml += `
+          <div class="change-item">
+            <h5>Hãng xe</h5>
+            <div class="change-comparison">
+              <div class="old-value">Cũ: ${document.getElementById('oldBrand').textContent}</div>
+              <div class="new-value">Mới: ${newBrand}</div>
+            </div>
+          </div>
+        `;
+      }
+      
+      if (newColor) {
+        changesHtml += `
+          <div class="change-item">
+            <h5>Màu xe</h5>
+            <div class="change-comparison">
+              <div class="old-value">Cũ: ${document.getElementById('oldColor').textContent}</div>
+              <div class="new-value">Mới: ${newColor}</div>
+            </div>
+          </div>
+        `;
+      }
+      
+      if (changesHtml) {
+        summaryDiv.innerHTML = changesHtml;
+      } else {
+        summaryDiv.innerHTML = '<p>Các thay đổi sẽ được hiển thị ở đây khi bạn nhập thông tin mới.</p>';
+      }
+    }
+    
+    // Add event listeners for form changes
+    document.getElementById('newLicensePlate').addEventListener('input', updateChangesSummary);
+    document.getElementById('newVehicleType').addEventListener('change', updateChangesSummary);
+    document.getElementById('newBrand').addEventListener('input', updateChangesSummary);
+    document.getElementById('newColor').addEventListener('input', updateChangesSummary);
+    
+    // Form submission
+    document.getElementById('updateForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      if (!hasSignature) {
+        alert('Vui lòng ký tên để xác nhận thông tin!');
+        return;
+      }
+      
+      const formData = new FormData(e.target);
+      
+      // Add signature to form data
+      const signatureData = canvas.toDataURL();
+      formData.append('signature', signatureData);
+      
+      try {
+        const response = await fetch('/api/car-update', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          document.getElementById('successAlert').style.display = 'block';
+          document.getElementById('errorAlert').style.display = 'none';
+          e.target.reset();
+          clearSignature();
+          updateChangesSummary();
+        } else {
+          throw new Error(result.error || 'Có lỗi xảy ra');
+        }
+      } catch (error) {
+        document.getElementById('errorAlert').style.display = 'block';
+        document.getElementById('successAlert').style.display = 'none';
+        document.getElementById('errorAlert').textContent = error.message;
+      }
+    });
+    
+    // File upload preview
+    ['cccdFile', 'cavetFile', 'vehiclePhoto'].forEach(fileId => {
+      document.getElementById(fileId).addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const preview = document.createElement('img');
+            preview.src = e.target.result;
+            preview.style.maxWidth = '100px';
+            preview.style.marginTop = '10px';
+            const container = document.getElementById(fileId).parentElement;
+            const existingPreview = container.querySelector('img');
+            if (existingPreview) {
+              container.removeChild(existingPreview);
+            }
+            container.appendChild(preview);
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -63,7 +63,7 @@ services:
     environment:
       MINIO_ROOT_USER: ngokimquy
       MINIO_ROOT_PASSWORD: vienspkT1!
-    command: server /data
+    command: server /data --console-address ":9001"
     ports:
       - "9000:9000"
       - "9001:9001"

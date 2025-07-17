@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dịch vụ thẻ xe</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #8B5CF6, #A855F7);
+      color: white;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    
+    .header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      font-size: 1.1em;
+      opacity: 0.9;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 50px 20px;
+    }
+    
+    .breadcrumb {
+      margin-bottom: 30px;
+      color: #666;
+    }
+    
+    .breadcrumb a {
+      color: #8B5CF6;
+      text-decoration: none;
+    }
+    
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+    
+    .section-title {
+      text-align: center;
+      font-size: 2em;
+      color: #333;
+      margin-bottom: 50px;
+      font-weight: bold;
+    }
+    
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-bottom: 50px;
+    }
+    
+    .service-card {
+      background: white;
+      border-radius: 15px;
+      padding: 40px 30px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .service-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+    
+    .service-icon {
+      font-size: 3em;
+      margin-bottom: 20px;
+      color: #8B5CF6;
+    }
+    
+    .service-title {
+      font-size: 1.3em;
+      color: #333;
+      margin-bottom: 15px;
+      font-weight: bold;
+    }
+    
+    .service-description {
+      color: #666;
+      line-height: 1.6;
+    }
+    
+    .vehicle-types {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .vehicle-types h3 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 1.5em;
+    }
+    
+    .vehicle-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    
+    .vehicle-item {
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .vehicle-item:hover {
+      border-color: #8B5CF6;
+      background: #f3f4f6;
+    }
+    
+    .vehicle-item.selected {
+      border-color: #8B5CF6;
+      background: #ede9fe;
+    }
+    
+    .vehicle-icon {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      color: #8B5CF6;
+    }
+    
+    .vehicle-name {
+      font-weight: bold;
+      color: #333;
+    }
+    
+    @media (max-width: 768px) {
+      .services-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .header h1 {
+        font-size: 2em;
+      }
+      
+      .section-title {
+        font-size: 1.5em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Dịch Vụ Thẻ Xe</h1>
+    <p>Quản lý thẻ xe và thông tin gửi xe tại chung cư</p>
+  </div>
+  
+  <div class="container">
+    <div class="breadcrumb">
+      <a href="/tenants">Trang chủ</a> > Dịch vụ thẻ xe
+    </div>
+    
+    <h2 class="section-title">Các Dịch Vụ Thẻ Xe</h2>
+    
+    <div class="services-grid">
+      <div class="service-card" onclick="window.location.href='/tenants/car-registration/monthly'">
+        <div class="service-icon">📅</div>
+        <div class="service-title">Đăng Ký Gửi Xe Tháng</div>
+        <div class="service-description">Đăng ký gửi xe theo tháng với giá ưu đãi</div>
+      </div>
+      
+      <div class="service-card" onclick="window.location.href='/tenants/car-registration/remake'">
+        <div class="service-icon">🔄</div>
+        <div class="service-title">Yêu Cầu Làm Lại Thẻ Xe</div>
+        <div class="service-description">Làm lại thẻ xe khi mất hoặc hư hỏng</div>
+      </div>
+      
+      <div class="service-card" onclick="window.location.href='/tenants/car-registration/update'">
+        <div class="service-icon">✏️</div>
+        <div class="service-title">Thay Đổi Thông Tin Đầu Xe</div>
+        <div class="service-description">Cập nhật thông tin biển số, màu sắc xe</div>
+      </div>
+      
+      <div class="service-card" onclick="window.location.href='/tenants/car-registration/cancel'">
+        <div class="service-icon">❌</div>
+        <div class="service-title">Hủy Thẻ Xe</div>
+        <div class="service-description">Hủy thẻ xe khi không sử dụng nữa</div>
+      </div>
+    </div>
+    
+  
+  </div>
+</body>
+</html>
