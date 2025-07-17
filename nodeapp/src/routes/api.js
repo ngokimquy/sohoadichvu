@@ -397,7 +397,7 @@ router.post('/api/car-remake', upload.fields([
     };
     await client.db('car_registrations').collection('remake_requests').insertOne(remakeData);
     await client.close();
-    res.json({ success: true, message: 'Gửi yêu cầu làm lại thẻ thành công!', chungcuName });
+    res.json({ success: true, message: 'Gửi yêu cầu làm lại thẻ thành công!', chungcuName, createdAt: remakeData.created_at });
   } catch (error) {
     console.error('Error processing car remake:', error);
     res.status(500).json({ error: 'Có lỗi xảy ra khi xử lý yêu cầu làm lại thẻ' });

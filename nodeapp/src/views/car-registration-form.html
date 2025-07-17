@@ -689,6 +689,7 @@
     function closeSuccessPopup() {
       const popup = document.getElementById('successPopup');
       if (popup) popup.remove();
+      window.location.href = '/tenants';
     }
     function downloadRegistrationInfo() {
       const popupContent = document.getElementById('popupContent');

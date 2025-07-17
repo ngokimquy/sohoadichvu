@@ -566,18 +566,14 @@
     // Form submission
     document.getElementById('carRemakeForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      
       if (!hasSignature) {
         alert('Vui lòng ký tên để xác nhận thông tin!');
         return;
       }
-      
       const formData = new FormData(e.target);
-      
       // Add signature to form data
       const signatureData = canvas.toDataURL();
       formData.append('signature', signatureData);
-      
       try {
         const response = await fetch('/api/car-remake', {
           method: 'POST',
@@ -590,11 +586,22 @@
           throw new Error('Lỗi khi đọc dữ liệu trả về từ server');
         }
         if (response.ok && result.success) {
-          document.getElementById('successAlert').style.display = 'block';
-          document.getElementById('errorAlert').style.display = 'none';
-          e.target.reset();
-          clearSignature();
-          document.querySelectorAll('.reason-option').forEach(el => el.classList.remove('selected'));
+          // Lấy lại dữ liệu form để show thông tin
+          const fullName = document.getElementById('fullName').value;
+          const email = document.getElementById('email').value;
+          const phone = document.getElementById('phone').value;
+          const apartment = document.getElementById('apartment').value;
+          const role = document.getElementById('role').options[document.getElementById('role').selectedIndex].text;
+          // Lấy thông tin xe
+          const vehicles = Array.from(document.querySelectorAll('#vehicleList .vehicle-item')).map(item => {
+            return {
+              type: item.querySelector('select').options[item.querySelector('select').selectedIndex].text,
+              license: item.querySelector('input[name="licensePlate[]"]').value,
+              brand: item.querySelector('input[name="brand[]"]').value,
+              color: item.querySelector('input[name="color[]"]').value
+            };
+          });
+          showSuccessPopup({ fullName, email, phone, apartment, role, vehicles, chungcuName: result.chungcuName, createdAt: result.createdAt });
         } else {
           throw new Error(result.error || 'Có lỗi xảy ra');
         }
@@ -604,6 +611,57 @@
         document.getElementById('errorAlert').textContent = error.message;
       }
     });
+
+    // Popup xác nhận thành công
+    function showSuccessPopup(info) {
+      let vehicleHtml = info.vehicles.map((v, i) => `<li>Loại xe: <b>${v.type}</b> | Biển số: <b>${v.license}</b> | Hãng: <b>${v.brand}</b> | Màu: <b>${v.color}</b></li>`).join('');
+      let dateStr = '';
+      if (info.createdAt) {
+        try {
+          const d = new Date(info.createdAt);
+          dateStr = d.toLocaleString('vi-VN', { hour12: false });
+        } catch (e) { dateStr = info.createdAt; }
+      }
+      const popup = document.createElement('div');
+      popup.id = 'successPopup';
+      popup.style = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);z-index:2000;display:flex;align-items:center;justify-content:center;';
+      popup.innerHTML = `
+        <div id="popupContent" style="background:#fff;padding:32px 28px 24px 28px;border-radius:12px;max-width:420px;width:95%;box-shadow:0 8px 32px rgba(124,92,246,0.10);text-align:center;">
+          <div style="font-size:2.2em;color:#28a745;margin-bottom:12px;">✔️</div>
+          <div style="font-size:1.3em;font-weight:700;color:#7C3AED;margin-bottom:10px;">Gửi yêu cầu làm lại thẻ thành công!</div>
+          <div style="font-size:1.1em;font-weight:600;color:#333;margin-bottom:8px;">${info.chungcuName ? 'Chung cư: ' + info.chungcuName : ''}</div>
+          <div style="font-size:1em;color:#555;margin-bottom:8px;">${dateStr ? 'Ngày đăng ký: ' + dateStr : ''}</div>
+          <div style="text-align:left;font-size:1em;margin-bottom:12px;">
+            <b>Họ tên:</b> ${info.fullName}<br>
+            <b>Email:</b> ${info.email}<br>
+            <b>Số điện thoại:</b> ${info.phone}<br>
+            <b>Căn hộ:</b> ${info.apartment}<br>
+            <b>Vai trò:</b> ${info.role}<br>
+            <b>Xe làm lại thẻ:</b>
+            <ul style="margin:6px 0 0 18px;padding:0 0 0 0;">${vehicleHtml}</ul>
+          </div>
+          <button class="btn btn-primary" onclick="downloadRegistrationInfo()">Tải xuống thông tin</button>
+          <button class="btn btn-secondary" style="margin-left:10px;" onclick="closeSuccessPopup()">Đóng</button>
+        </div>
+      `;
+      document.body.appendChild(popup);
+      window._lastRegistrationInfo = info;
+    }
+    function closeSuccessPopup() {
+      const popup = document.getElementById('successPopup');
+      if (popup) popup.remove();
+      window.location.href = '/tenants';
+    }
+    function downloadRegistrationInfo() {
+      const popupContent = document.getElementById('popupContent');
+      if (!popupContent) return;
+      html2canvas(popupContent).then(function(canvas) {
+        const link = document.createElement('a');
+        link.download = 'thong-tin-lam-lai-the-xe.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
     
     // File upload preview
     document.getElementById('cccdFiles').addEventListener('change', function(e) {
@@ -709,5 +767,6 @@
       addVehicle();
     }
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </body>
 </html>
