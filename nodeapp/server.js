@@ -135,7 +135,7 @@ app.post('/admin', express.urlencoded({ extended: true }), (req, res) => {
     // Đăng nhập thành công, chuyển đến dashboard
     res.redirect('/admin/dashboard');
   } else {
-    res.send('Sai thông tin đăng nhập!');
+    res.send('Sai thông tin đăng nhập. !');
   }
 });
 
