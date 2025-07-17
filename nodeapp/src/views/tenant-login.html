@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Đăng nhập Ban Quản Lý</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { background: #f3f4f6; font-family: 'Inter', Arial, sans-serif; margin: 0; }
+    .login-container { max-width: 400px; margin: 80px auto; background: #fff; border-radius: 12px; box-shadow: 0 8px 32px rgba(124,92,246,0.10); padding: 36px 32px; }
+    h2 { color: #7C3AED; text-align: center; margin-bottom: 24px; }
+    .form-group { margin-bottom: 18px; }
+    label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
+    input[type="text"], input[type="password"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 1em; }
+    .btn { width: 100%; background: #7C3AED; color: #fff; border: none; border-radius: 6px; padding: 14px 0; font-size: 1.1em; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .btn:hover { background: #6d28d9; }
+    .error-msg { color: #dc3545; text-align: center; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Đăng nhập Ban Quản Lý</h2>
+    <form method="POST" action="/tenant/login">
+      <div class="form-group">
+        <label for="username">Tên đăng nhập</label>
+        <input type="text" id="username" name="username" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Mật khẩu</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+      <!-- Hiển thị lỗi nếu có -->
+      <div class="error-msg">{{errorMsg}}</div>
+      <button type="submit" class="btn">Đăng nhập</button>
+    </form>
+  </div>
+  <script>
+    // Hiển thị lỗi nếu có ?error=1
+    if (window.location.search.includes('error=1')) {
+      document.querySelector('.error-msg').innerText = 'Sai tài khoản hoặc mật khẩu!';
+    }
+  </script>
+</body>
+</html>

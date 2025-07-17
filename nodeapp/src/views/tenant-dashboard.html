@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Quản lý đăng ký dịch vụ - Ban quản lý</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { background: #f3f4f6; font-family: 'Inter', Arial, sans-serif; margin: 0; }
+    .dashboard-layout { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 220px; background: linear-gradient(180deg,#7C3AED 80%,#a78bfa 100%); color: #fff;
+      display: flex; flex-direction: column; align-items: stretch; padding: 0; box-shadow: 2px 0 16px rgba(0,0,0,0.08); z-index: 100;
+    }
+    .sidebar-header { display: flex; align-items: center; justify-content: center; padding: 28px 0 18px 0; font-size: 1.5em; font-weight: 700; letter-spacing: 1px; }
+    .sidebar-menu { list-style: none; padding: 0; margin: 0; }
+    .sidebar-menu a {
+      color: #fff; text-decoration: none; display: block; padding: 14px 32px; border-left: 4px solid transparent; border-radius: 0 24px 24px 0; transition: background 0.2s, border 0.2s; font-size: 1.08em; font-weight: 600;
+    }
+    .sidebar-menu a.active, .sidebar-menu a:hover { background: #6d28d9; border-left: 4px solid #fff; }
+    .logout-btn { margin: 32px 24px 24px 24px; background: #dc3545; color: #fff; border: none; border-radius: 8px; padding: 14px 0; font-size: 17px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .logout-btn:hover { background: #b71c1c; }
+    .main-content { margin-left: 220px; flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 100vh; }
+    .main-header { background: #fff; border-bottom: 2px solid #8B5CF6; padding: 28px 40px 18px 40px; display: flex; align-items: center; justify-content: space-between; }
+    .main-header h1 { color: #7C3AED; font-size: 2.1em; margin: 0; font-weight: 700; letter-spacing: 1px; }
+    .main-area { flex: 1; padding: 36px 40px 40px 40px; background: #fff; border-radius: 0 0 20px 20px; box-shadow: 0 8px 32px rgba(124,92,246,0.10); min-height: 80vh; }
+    .main-footer { text-align: right; color: #888; font-size: 0.98em; padding: 18px 40px 10px 0; background: none; }
+    .section-title { font-size: 1.8em; font-weight: 700; margin: 0 0 24px 0; color: #7C3AED; border-bottom: 2px solid #8B5CF6; padding-bottom: 8px; }
+    .search-box { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .search-box input { flex: 1; padding: 12px 16px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; margin-right: 12px; }
+    .search-box button { background: #7C3AED; color: #fff; border: none; border-radius: 4px; padding: 12px 24px; font-size: 1em; cursor: pointer; transition: background 0.2s; }
+    .search-box button:hover { background: #6d28d9; }
+    .reg-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+    .reg-table th, .reg-table td { padding: 12px 16px; border: 1px solid #ddd; text-align: left; }
+    .reg-table th { background: #f9f9f9; font-weight: 700; }
+    .reg-table tbody tr:hover { background: #f1f1f1; }
+    @media (max-width: 900px) {
+      .dashboard-layout { flex-direction: column; }
+      .sidebar { width: 100vw; min-height: unset; flex-direction: row; align-items: center; position: static; }
+      .sidebar-header { padding: 18px 10px 10px 10px; }
+      .sidebar-menu { display: flex; flex-direction: row; margin: 0; }
+      .sidebar-menu a { padding: 10px 16px; font-size: 1em; border-radius: 0; }
+      .main-content { margin-left: 0; }
+      .main-header, .main-area { padding: 12px 4px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-layout">
+    <nav class="sidebar">
+      <div class="sidebar-header">Quản lý Tenant</div>
+      <ul class="sidebar-menu">
+        <li><a href="#" class="active">Đăng ký dịch vụ</a></li>
+        <!-- Có thể mở rộng thêm menu khác nếu cần -->
+      </ul>
+      <button class="logout-btn" onclick="logout()">Đăng xuất</button>
+    </nav>
+    <div class="main-content">
+      <div class="main-header">
+        <h1 id="mainTitle">Quản lý đăng ký dịch vụ</h1>
+      </div>
+      <div class="main-area" id="mainArea">
+        <div class="section-title">Danh sách đăng ký dịch vụ của cư dân</div>
+        <div class="search-box">
+          <input type="text" id="regSearch" placeholder="Tìm kiếm tên, căn hộ, dịch vụ..." oninput="filterRegTable()">
+        </div>
+        <table class="reg-table" id="regTable">
+          <thead>
+            <tr><th>Dịch vụ</th><th>Loại đăng ký</th><th>Người đăng ký</th><th>Email</th><th>Căn hộ</th><th>Thời gian</th><th>Trạng thái</th><th>File</th></tr>
+          </thead>
+          <tbody id="regTableBody"></tbody>
+        </table>
+      </div>
+      <div class="main-footer">&copy; 2025 Tenant Dashboard</div>
+    </div>
+  </div>
+  <script>
+    // Đăng xuất
+    function logout() {
+      fetch('/tenant/logout', { method: 'POST' }).then(() => {
+        window.location.href = '/tenant/login';
+      });
+    }
+    // Lấy danh sách đăng ký dịch vụ của tenant hiện tại
+    let _regs = [];
+    async function fetchRegistrations() {
+      const res = await fetch('/tenant/api/registrations');
+      const regs = await res.json();
+      _regs = regs;
+      renderRegTable(regs);
+    }
+    function renderRegTable(regs) {
+      const body = document.getElementById('regTableBody');
+      if (!body) return;
+      body.innerHTML = regs.map(r => `
+        <tr>
+          <td>${r.service_name||''}</td>
+          <td>${r.registration_type||''}</td>
+          <td>${r.user_name||''}</td>
+          <td>${r.user_email||''}</td>
+          <td>${r.apartment||''}</td>
+          <td>${r.created_at ? new Date(r.created_at).toLocaleString() : ''}</td>
+          <td>${r.status||''}</td>
+          <td>${r.file_url ? `<a href="${r.file_url}" target="_blank">Tải file</a>` : ''}</td>
+        </tr>
+      `).join('');
+    }
+    function filterRegTable() {
+      const val = document.getElementById('regSearch')?.value.toLowerCase() || '';
+      const rows = document.querySelectorAll('#regTableBody tr');
+      rows.forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(val) ? '' : 'none';
+      });
+    }
+    // Tải dữ liệu khi load trang
+    fetchRegistrations();
+  </script>
+</body>
+</html>

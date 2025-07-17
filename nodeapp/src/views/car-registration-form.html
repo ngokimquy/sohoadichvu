@@ -622,6 +622,7 @@
           body: formData
         });
         if (response.ok) {
+          const result = await response.json();
           // Lấy lại dữ liệu form để show thông tin
           const fullName = document.getElementById('fullName').value;
           const email = document.getElementById('email').value;
@@ -636,8 +637,8 @@
               owner: item.querySelector('input[name="ownerName[]"]').value
             };
           });
-          // Hiển thị popup thông tin
-          showSuccessPopup({ fullName, email, phone, apartment, role, vehicles });
+          // Hiển thị popup thông tin, truyền thêm chungcuName và createdAt
+          showSuccessPopup({ fullName, email, phone, apartment, role, vehicles, chungcuName: result.chungcuName, createdAt: result.createdAt });
         } else {
           alert('Có lỗi xảy ra. Vui lòng thử lại.');
         }
@@ -651,13 +652,23 @@
     function showSuccessPopup(info) {
       // Tạo HTML popup
       let vehicleHtml = info.vehicles.map((v, i) => `<li>Loại xe: <b>${v.type}</b> | Biển số: <b>${v.license}</b> | Chủ xe: <b>${v.owner}</b></li>`).join('');
+      // Định dạng ngày đăng ký
+      let dateStr = '';
+      if (info.createdAt) {
+        try {
+          const d = new Date(info.createdAt);
+          dateStr = d.toLocaleString('vi-VN', { hour12: false });
+        } catch (e) { dateStr = info.createdAt; }
+      }
       const popup = document.createElement('div');
       popup.id = 'successPopup';
       popup.style = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);z-index:2000;display:flex;align-items:center;justify-content:center;';
       popup.innerHTML = `
-        <div style="background:#fff;padding:32px 28px 24px 28px;border-radius:12px;max-width:420px;width:95%;box-shadow:0 8px 32px rgba(124,92,246,0.10);text-align:center;">
+        <div id="popupContent" style="background:#fff;padding:32px 28px 24px 28px;border-radius:12px;max-width:420px;width:95%;box-shadow:0 8px 32px rgba(124,92,246,0.10);text-align:center;">
           <div style="font-size:2.2em;color:#28a745;margin-bottom:12px;">✔️</div>
           <div style="font-size:1.3em;font-weight:700;color:#7C3AED;margin-bottom:10px;">Đăng ký thành công!</div>
+          <div style="font-size:1.1em;font-weight:600;color:#333;margin-bottom:8px;">${info.chungcuName ? 'Chung cư: ' + info.chungcuName : ''}</div>
+          <div style="font-size:1em;color:#555;margin-bottom:8px;">${dateStr ? 'Ngày đăng ký: ' + dateStr : ''}</div>
           <div style="text-align:left;font-size:1em;margin-bottom:12px;">
             <b>Họ tên:</b> ${info.fullName}<br>
             <b>Email:</b> ${info.email}<br>
@@ -680,21 +691,14 @@
       if (popup) popup.remove();
     }
     function downloadRegistrationInfo() {
-      const info = window._lastRegistrationInfo;
-      let text = `THÔNG TIN ĐĂNG KÝ THẺ XE\n--------------------------\n`;
-      text += `Họ tên: ${info.fullName}\nEmail: ${info.email}\nSố điện thoại: ${info.phone}\nCăn hộ: ${info.apartment}\nVai trò: ${info.role}\n`;
-      text += `\nXe đăng ký:\n`;
-      info.vehicles.forEach((v, i) => {
-        text += `  - Loại xe: ${v.type} | Biển số: ${v.license} | Chủ xe: ${v.owner}\n`;
+      const popupContent = document.getElementById('popupContent');
+      if (!popupContent) return;
+      html2canvas(popupContent).then(function(canvas) {
+        const link = document.createElement('a');
+        link.download = 'thong-tin-dang-ky-the-xe.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
       });
-      const blob = new Blob([text], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'thong-tin-dang-ky-the-xe.txt';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
     }
     // JS: Responsive canvas size
     function resizeSignatureCanvas() {
@@ -711,5 +715,6 @@
     window.addEventListener('resize', resizeSignatureCanvas);
     resizeSignatureCanvas();
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </body>
 </html>
