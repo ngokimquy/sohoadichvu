@@ -404,4 +404,116 @@ router.post('/api/car-remake', upload.fields([
   }
 });
 
+// API xử lý hủy thẻ xe
+router.post('/api/car-cancel', upload.fields([
+  { name: 'cccdFiles', maxCount: 10 },
+  { name: 'cavetFiles', maxCount: 10 }
+]), async (req, res) => {
+  const tenantId = req.tenant_id;
+  if (!tenantId) {
+    return res.status(400).json({ error: 'Không xác định được tenant' });
+  }
+  try {
+    // Lấy thông tin cá nhân
+    const { fullName, phone, email, apartment, role, signature, oldCardNumber } = req.body;
+    if (!fullName || !phone || !email || !apartment || !role) {
+      return res.status(400).json({ error: 'Thiếu thông tin cá nhân' });
+    }
+    // Lấy thông tin xe (mảng)
+    let vehicleTypes = req.body['vehicleType[]'] || req.body.vehicleType || [];
+    let licensePlates = req.body['licensePlate[]'] || req.body.licensePlate || [];
+    let brands = req.body['brand[]'] || req.body.brand || [];
+    let colors = req.body['color[]'] || req.body.color || [];
+    if (!Array.isArray(vehicleTypes)) vehicleTypes = [vehicleTypes];
+    if (!Array.isArray(licensePlates)) licensePlates = [licensePlates];
+    if (!Array.isArray(brands)) brands = [brands];
+    if (!Array.isArray(colors)) colors = [colors];
+    if (
+      vehicleTypes.length === 0 ||
+      licensePlates.length === 0 ||
+      vehicleTypes.length !== licensePlates.length
+    ) {
+      return res.status(400).json({ error: 'Thiếu hoặc sai thông tin xe' });
+    }
+    const vehicles = vehicleTypes.map((type, i) => ({
+      type,
+      license_plate: licensePlates[i] || '',
+      brand: brands[i] || '',
+      color: colors[i] || ''
+    }));
+    // Kiểm tra file hồ sơ
+    const cccdFiles = req.files && req.files.cccdFiles ? req.files.cccdFiles : [];
+    const cavetFiles = req.files && req.files.cavetFiles ? req.files.cavetFiles : [];
+    if (cccdFiles.length === 0) {
+      return res.status(400).json({ error: 'Thiếu file CCCD mặt trước' });
+    }
+    if (cavetFiles.length === 0) {
+      return res.status(400).json({ error: 'Thiếu file Cavet xe mặt trước' });
+    }
+    // Kiểm tra signature hợp lệ
+    if (
+      !signature ||
+      typeof signature !== 'string' ||
+      !signature.startsWith('data:image/') ||
+      !signature.includes('base64,') ||
+      signature.split('base64,')[1].trim().length < 100
+    ) {
+      return res.status(400).json({ error: 'Vui lòng ký tên xác nhận' });
+    }
+    // Lưu file lên MinIO
+    const bucketName = 'car-cancel'; // Đổi sang bucket riêng cho thẻ hủy
+    const bucketExists = await minioClient.bucketExists(bucketName);
+    if (!bucketExists) await minioClient.makeBucket(bucketName);
+    const cccdFileUrls = [];
+    for (const file of cccdFiles) {
+      const fileName = `${tenantId}_${Date.now()}_cccd_${file.originalname}`;
+      await minioClient.putObject(bucketName, fileName, file.buffer, file.size);
+      cccdFileUrls.push(fileName);
+    }
+    const cavetFileUrls = [];
+    for (const file of cavetFiles) {
+      const fileName = `${tenantId}_${Date.now()}_cavet_${file.originalname}`;
+      await minioClient.putObject(bucketName, fileName, file.buffer, file.size);
+      cavetFileUrls.push(fileName);
+    }
+    // Lưu chữ ký
+    const signatureBuffer = Buffer.from(signature.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+    const signatureFileName = `${tenantId}_${Date.now()}_signature.png`;
+    await minioClient.putObject(bucketName, signatureFileName, signatureBuffer);
+    // Lưu thông tin hủy thẻ vào MongoDB (collection cancel_requests)
+    const client = new MongoClient(mongoUri);
+    await client.connect();
+    // Lấy tên chung cư
+    let chungcuName = '';
+    try {
+      const tenant = await client.db('admin').collection('tenants').findOne({ tenant_id: tenantId });
+      if (tenant && tenant.name) chungcuName = tenant.name;
+    } catch (err) { /* ignore */ }
+    const cancelData = {
+      tenant_id: tenantId,
+      personal_info: {
+        full_name: fullName,
+        phone,
+        email,
+        apartment,
+        role
+      },
+      vehicles,
+      old_card_number: oldCardNumber || '',
+      cccd_files: cccdFileUrls,
+      cavet_files: cavetFileUrls,
+      signature: signatureFileName,
+      status: 'pending',
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+    await client.db('car_registrations').collection('cancel_requests').insertOne(cancelData);
+    await client.close();
+    res.json({ success: true, message: 'Gửi yêu cầu hủy thẻ thành công!', chungcuName, createdAt: cancelData.created_at });
+  } catch (error) {
+    console.error('Error processing car cancel:', error);
+    res.status(500).json({ error: 'Có lỗi xảy ra khi xử lý yêu cầu hủy thẻ' });
+  }
+});
+
 module.exports = router;
