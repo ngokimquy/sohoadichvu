@@ -1204,14 +1204,12 @@ router.post('/api/resident-info-register', upload.none(), async (req, res) => {
       const relations = req.body['memberRelation[]'] || [];
       const ids = req.body['memberId[]'] || [];
       for (let i = 0; i < names.length; i++) {
-        if (names[i] || dobs[i] || relations[i] || ids[i]) {
-          members.push({
-            name: names[i] || '',
-            dob: dobs[i] || '',
-            relation: relations[i] || '',
-            id: ids[i] || ''
-          });
-        }
+        members.push({
+          name: names[i] || '',
+          dob: dobs[i] || '',
+          relation: relations[i] || '',
+          id: ids[i] || ''
+        });
       }
     } else if (req.body['memberName[]']) {
       // Một thành viên
@@ -1222,7 +1220,7 @@ router.post('/api/resident-info-register', upload.none(), async (req, res) => {
         id: req.body['memberId[]'] || ''
       });
     }
-    // Lưu vào MongoDB
+    // Lưu vào MongoDB (DB riêng: resident_info)
     const client = new MongoClient(mongoUri);
     await client.connect();
     let chungcuName = '';
@@ -1238,7 +1236,7 @@ router.post('/api/resident-info-register', upload.none(), async (req, res) => {
       created_at: new Date(),
       updated_at: new Date()
     };
-    await client.db('utility_services').collection('resident_info_registers').insertOne(registrationData);
+    await client.db('resident_info').collection('resident_info_registers').insertOne(registrationData);
     await client.close();
     res.json({ success: true, message: 'Đăng ký thông tin cư dân thành công!', chungcuName, createdAt: registrationData.created_at });
   } catch (error) {

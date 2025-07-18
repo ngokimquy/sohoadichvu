@@ -187,7 +187,7 @@
       const row = document.createElement('tr');
       row.innerHTML = `
         <td style="padding:10px 6px;vertical-align:middle;">
-          <input type="text" name="memberName[]" style="width:100%;box-sizing:border-box;padding:10px 12px;margin:0;border-radius:7px;border:1.5px solid #d1d5db;background:#f3f4f6;font-size:1em;">
+          <input type="text" name="memberName[]" required style="width:100%;box-sizing:border-box;padding:10px 12px;margin:0;border-radius:7px;border:1.5px solid #d1d5db;background:#f3f4f6;font-size:1em;">
         </td>
         <td style="padding:10px 6px;vertical-align:middle;">
           <input type="date" name="memberDob[]" style="width:100%;box-sizing:border-box;padding:10px 12px;margin:0;border-radius:7px;border:1.5px solid #d1d5db;background:#f3f4f6;font-size:1em;">
@@ -261,15 +261,13 @@
       const rows = tbody.querySelectorAll('tr');
       let valid = true;
       rows.forEach(row => {
-        const inputs = row.querySelectorAll('input');
-        inputs.forEach(input => {
-          if (!input.value.trim()) {
-            input.style.borderColor = '#f87171';
-            valid = false;
-          } else {
-            input.style.borderColor = '#d1d5db';
-          }
-        });
+        const nameInput = row.querySelector('input[name="memberName[]"]');
+        if (!nameInput.value.trim()) {
+          nameInput.style.borderColor = '#f87171';
+          valid = false;
+        } else {
+          nameInput.style.borderColor = '#d1d5db';
+        }
       });
       if (!valid) {
         alert('Vui lòng nhập đầy đủ thông tin các thành viên trong căn hộ!');
