@@ -125,8 +125,37 @@ router.get('/tenants/:service?/:subservice?', async (req, res) => {
     return;
   }
   
-  // Nếu service là utility-card, hiển thị trang đăng ký thẻ tiện ích khác
+  // Nếu service là utility-card, kiểm tra từng subservice cụ thể
   if (service === 'utility-card') {
+    // Subservice: elevator-register
+    if (subservice === 'elevator-register') {
+      const htmlPath = path.join(__dirname, '..', 'views', 'elevator-register.html');
+      fs.readFile(htmlPath, 'utf8', (err, html) => {
+        if (err) return res.status(500).send('Lỗi đọc giao diện');
+        res.send(html.replace('{{chungcuName}}', chungcuName ? chungcuName : ''));
+      });
+      return;
+    }
+    // Subservice: elevator-cancel (chưa có form, để sẵn route)
+    if (subservice === 'elevator-cancel') {
+      const htmlPath = path.join(__dirname, '..', 'views', 'elevator-cancel-form.html');
+      fs.readFile(htmlPath, 'utf8', (err, html) => {
+        if (err) return res.status(500).send('Lỗi đọc giao diện');
+        res.send(html.replace('{{chungcuName}}', chungcuName ? chungcuName : ''));
+      });
+      return;
+    }
+    // Subservice: pool-register (chưa có form, để sẵn route)
+    if (subservice === 'pool-register') {
+      const htmlPath = path.join(__dirname, '..', 'views', 'pool-register-form.html');
+      fs.readFile(htmlPath, 'utf8', (err, html) => {
+        if (err) return res.status(500).send('Lỗi đọc giao diện');
+        res.send(html.replace('{{chungcuName}}', chungcuName ? chungcuName : ''));
+      });
+      return;
+    }
+    // ...có thể bổ sung thêm các subservice khác ở đây...
+    // Nếu không có subservice hoặc subservice không khớp, trả về trang mẹ utility-card
     const htmlPath = path.join(__dirname, '..', 'views', 'utility-card.html');
     fs.readFile(htmlPath, 'utf8', (err, html) => {
       if (err) return res.status(500).send('Lỗi đọc giao diện');
@@ -134,7 +163,7 @@ router.get('/tenants/:service?/:subservice?', async (req, res) => {
     });
     return;
   }
-  
+
   // Mặc định hiển thị trang chính
   const htmlPath = path.join(__dirname, '..', 'views', 'tenant-register.html');
   fs.readFile(htmlPath, 'utf8', (err, html) => {
@@ -654,6 +683,79 @@ router.post('/api/utility-card', express.urlencoded({ extended: true }), async (
     });
     await client.close();
     res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Không thể lưu đăng ký. Vui lòng thử lại sau.' });
+  }
+});
+
+// Đăng ký thẻ thang máy (có số lượng thẻ, ghi chú, file CCCD)
+router.post('/api/elevator-card-register', upload.fields([
+  { name: 'cccdFiles', maxCount: 10 }
+]), async (req, res) => {
+  const tenantId = req.tenant_id;
+  if (!tenantId) {
+    return res.status(400).json({ success: false, error: 'Không xác định được tenant' });
+  }
+  try {
+    const { fullName, apartment, phone, email, role, cardQuantity, note, signature } = req.body;
+    if (!fullName || !apartment || !phone || !role || !cardQuantity) {
+      return res.status(400).json({ success: false, error: 'Vui lòng nhập đầy đủ thông tin bắt buộc.' });
+    }
+    // Kiểm tra file CCCD
+    const cccdFiles = req.files && req.files.cccdFiles ? req.files.cccdFiles : [];
+    if (cccdFiles.length === 0) {
+      return res.status(400).json({ success: false, error: 'Vui lòng tải lên file CCCD mặt trước.' });
+    }
+    // Kiểm tra signature hợp lệ
+    if (
+      !signature ||
+      typeof signature !== 'string' ||
+      !signature.startsWith('data:image/') ||
+      !signature.includes('base64,') ||
+      signature.split('base64,')[1].trim().length < 100
+    ) {
+      return res.status(400).json({ success: false, error: 'Vui lòng ký tên xác nhận.' });
+    }
+    // Lưu file lên MinIO
+    const bucketName = 'elevator-cards';
+    const bucketExists = await minioClient.bucketExists(bucketName);
+    if (!bucketExists) await minioClient.makeBucket(bucketName);
+    const cccdFileUrls = [];
+    for (const file of cccdFiles) {
+      const fileName = `${tenantId}_${Date.now()}_cccd_${file.originalname}`;
+      await minioClient.putObject(bucketName, fileName, file.buffer, file.size);
+      cccdFileUrls.push(fileName);
+    }
+    // Lưu chữ ký lên MinIO
+    const signatureBuffer = Buffer.from(signature.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+    const signatureFileName = `${tenantId}_${Date.now()}_signature.png`;
+    await minioClient.putObject(bucketName, signatureFileName, signatureBuffer);
+    // Lưu thông tin đăng ký vào MongoDB (db: utility_card, collection: elevator_cards)
+    const client = new MongoClient(mongoUri);
+    await client.connect();
+    let chungcuName = '';
+    try {
+      const tenant = await client.db('admin').collection('tenants').findOne({ tenant_id: tenantId });
+      if (tenant && tenant.name) chungcuName = tenant.name;
+    } catch (err) { /* ignore */ }
+    const registrationData = {
+      tenant_id: tenantId,
+      full_name: fullName,
+      phone,
+      email,
+      apartment,
+      role,
+      card_quantity: Number(cardQuantity),
+      note,
+      cccd_files: cccdFileUrls,
+      signature: signatureFileName,
+      status: 'pending',
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+    await client.db('utility_card').collection('elevator_cards').insertOne(registrationData);
+    await client.close();
+    res.json({ success: true, message: 'Đăng ký thẻ thang máy thành công!', chungcuName, createdAt: registrationData.created_at });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Không thể lưu đăng ký. Vui lòng thử lại sau.' });
   }
