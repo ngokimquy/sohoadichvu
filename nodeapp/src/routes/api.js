@@ -193,7 +193,7 @@ router.post('/api/car-registration', upload.fields([
   try {
     // Lấy thông tin cá nhân
     const { fullName, phone, email, apartment, role, signature, registrationDate } = req.body;
-    if (!fullName || !phone || !email || !apartment || !role || !registrationDate) {
+    if (!fullName || !phone || !apartment || !role || !registrationDate) {
       return res.status(400).json({ error: 'Thiếu thông tin cá nhân hoặc ngày đăng ký xe' });
     }
     // Lấy thông tin xe (mảng)
@@ -304,7 +304,7 @@ router.post('/api/car-remake', upload.fields([
   try {
     // Lấy thông tin cá nhân
     const { fullName, phone, email, apartment, role, signature, remakeReason, oldCardNumber } = req.body;
-    if (!fullName || !phone || !email || !apartment || !role || !remakeReason) {
+    if (!fullName || !phone || !apartment || !role || !remakeReason) {
       return res.status(400).json({ error: 'Thiếu thông tin cá nhân hoặc lý do làm lại thẻ' });
     }
     // Lấy thông tin xe (mảng)
@@ -417,7 +417,7 @@ router.post('/api/car-cancel', upload.fields([
   try {
     // Lấy thông tin cá nhân
     const { fullName, phone, email, apartment, role, signature, oldCardNumber, cancelDate } = req.body;
-    if (!fullName || !phone || !email || !apartment || !role || !cancelDate) {
+    if (!fullName || !phone || !apartment || !role || !cancelDate) {
       return res.status(400).json({ error: 'Thiếu thông tin cá nhân hoặc ngày hủy thẻ' });
     }
     // Lấy thông tin xe (mảng)
@@ -530,7 +530,7 @@ router.post('/api/car-update', upload.fields([
   try {
     // Lấy thông tin cá nhân
     const { fullName, phone, email, apartment, role, changeDate, changeReason, signature } = req.body;
-    if (!fullName || !phone || !email || !apartment || !role || !changeDate || !changeReason) {
+    if (!fullName || !phone || !apartment || !role || !changeDate || !changeReason) {
       return res.status(400).json({ error: 'Thiếu thông tin bắt buộc' });
     }
     // Lấy thông tin xe (mảng)
