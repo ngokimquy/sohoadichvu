@@ -208,6 +208,16 @@ router.get('/tenants/:service?/:subservice?', async (req, res) => {
     return;
   }
 
+  // Nếu service là moving-service, hiển thị trang đăng ký dịch vụ chuyển nhà
+  if (service === 'moving-service') {
+    const htmlPath = path.join(__dirname, '..', 'views', 'moving-service-register.html');
+    fs.readFile(htmlPath, 'utf8', (err, html) => {
+      if (err) return res.status(500).send('Lỗi đọc giao diện');
+      res.send(html.replace('{{chungcuName}}', chungcuName ? chungcuName : ''));
+    });
+    return;
+  }
+
   // Mặc định hiển thị trang chính
   const htmlPath = path.join(__dirname, '..', 'views', 'tenant-register.html');
   fs.readFile(htmlPath, 'utf8', (err, html) => {
@@ -1242,6 +1252,49 @@ router.post('/api/resident-info-register', upload.none(), async (req, res) => {
   } catch (error) {
     console.error('Error processing resident info register:', error);
     res.status(500).json({ error: 'Có lỗi xảy ra khi xử lý đăng ký thông tin cư dân' });
+  }
+});
+
+// API xử lý đăng ký vận chuyển hàng hóa vào
+router.post('/api/moving-service-register', express.json(), async (req, res) => {
+  const tenantId = req.tenant_id;
+  if (!tenantId) {
+    return res.status(400).json({ success: false, error: 'Không xác định được tenant' });
+  }
+  try {
+    const { fullName, apartment, phone, email, role, moveDate, moveTime, goodsDesc, note } = req.body;
+    if (!fullName || !apartment || !phone || !role || !moveDate || !moveTime || !goodsDesc) {
+      return res.status(400).json({ success: false, error: 'Vui lòng nhập đầy đủ thông tin bắt buộc.' });
+    }
+    // Lưu vào MongoDB (DB riêng: moving_service)
+    const client = new MongoClient(mongoUri);
+    await client.connect();
+    let chungcuName = '';
+    try {
+      const tenant = await client.db('admin').collection('tenants').findOne({ tenant_id: tenantId });
+      if (tenant && tenant.name) chungcuName = tenant.name;
+    } catch (err) { /* ignore */ }
+    const registrationData = {
+      tenant_id: tenantId,
+      full_name: fullName,
+      apartment,
+      phone,
+      email,
+      role,
+      move_date: moveDate,
+      move_time: moveTime,
+      goods_desc: goodsDesc,
+      note,
+      status: 'pending',
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+    await client.db('moving_service').collection('moving_service_registers').insertOne(registrationData);
+    await client.close();
+    res.json({ success: true, message: 'Đăng ký vận chuyển thành công!', chungcuName, createdAt: registrationData.created_at });
+  } catch (error) {
+    console.error('Error processing moving service register:', error);
+    res.status(500).json({ success: false, error: 'Có lỗi xảy ra khi xử lý đăng ký vận chuyển' });
   }
 });
 
