@@ -104,19 +104,45 @@ router.get('/tenants/:service?/:subservice?', async (req, res) => {
     return;
   }
   
-  // Nếu service là utility-services, hiển thị trang dịch vụ tiện ích
+  // Nếu service là utility-services, hiển thị trang dịch vụ tiện ích và các subservice con
   if (service === 'utility-services') {
-    // Nếu có subservice là contact-management, hiển thị form liên hệ
-    if (subservice === 'contact-management') {
-      const htmlPath = path.join(__dirname, '..', 'views', 'contact-management-form.html');
+    // Subservice: advertising-register
+    if (subservice === 'advertising-register') {
+      const htmlPath = path.join(__dirname, '..', 'views', 'advertising-register.html');
       fs.readFile(htmlPath, 'utf8', (err, html) => {
         if (err) return res.status(500).send('Lỗi đọc giao diện');
         res.send(html.replace('{{chungcuName}}', chungcuName ? chungcuName : ''));
       });
       return;
     }
-    
-    // Mặc định hiển thị trang dịch vụ tiện ích
+    // Subservice: camera-check-request
+    if (subservice === 'camera-check-request') {
+      const htmlPath = path.join(__dirname, '..', 'views', 'camera-check-request.html');
+      fs.readFile(htmlPath, 'utf8', (err, html) => {
+        if (err) return res.status(500).send('Lỗi đọc giao diện');
+        res.send(html.replace('{{chungcuName}}', chungcuName ? chungcuName : ''));
+      });
+      return;
+    }
+    // Subservice: pet-commitment-register
+    if (subservice === 'pet-commitment-register') {
+      const htmlPath = path.join(__dirname, '..', 'views', 'pet-commitment-register.html');
+      fs.readFile(htmlPath, 'utf8', (err, html) => {
+        if (err) return res.status(500).send('Lỗi đọc giao diện');
+        res.send(html.replace('{{chungcuName}}', chungcuName ? chungcuName : ''));
+      });
+      return;
+    }
+    // Subservice: resident-info-form
+    if (subservice === 'resident-info-form') {
+      const htmlPath = path.join(__dirname, '..', 'views', 'resident-info-form.html');
+      fs.readFile(htmlPath, 'utf8', (err, html) => {
+        if (err) return res.status(500).send('Lỗi đọc giao diện');
+        res.send(html.replace('{{chungcuName}}', chungcuName ? chungcuName : ''));
+      });
+      return;
+    }
+    // Nếu không có subservice hoặc subservice không khớp, trả về trang mẹ utility-services
     const htmlPath = path.join(__dirname, '..', 'views', 'utility-services.html');
     fs.readFile(htmlPath, 'utf8', (err, html) => {
       if (err) return res.status(500).send('Lỗi đọc giao diện');
@@ -902,6 +928,63 @@ router.post('/api/pool-register', upload.fields([
     res.json({ success: true, message: 'Đăng ký vòng bơi thành công!', chungcuName, createdAt: registrationData.created_at });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Không thể lưu đăng ký. Vui lòng thử lại sau.' });
+  }
+});
+
+// API xử lý đăng ký quảng cáo
+router.post('/api/advertising-register', upload.none(), async (req, res) => {
+  const tenantId = req.tenant_id;
+  if (!tenantId) {
+    return res.status(400).json({ error: 'Không xác định được tenant' });
+  }
+  try {
+    const { fullName, phone, email, apartment, role, content, location, adType, fromDate, toDate, signature } = req.body;
+    if (!fullName || !phone || !apartment || !role || !content || !location || !adType || !fromDate || !toDate || !signature) {
+      return res.status(400).json({ error: 'Vui lòng nhập đầy đủ thông tin bắt buộc.' });
+    }
+    // Lưu chữ ký (base64) vào MinIO nếu có
+    let signatureFileName = '';
+    if (signature && minioClient) {
+      const signatureBuffer = Buffer.from(signature.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+      signatureFileName = `${tenantId}_${Date.now()}_ad_signature.png`;
+      const bucketName = 'advertising-register';
+      const bucketExists = await minioClient.bucketExists(bucketName);
+      if (!bucketExists) await minioClient.makeBucket(bucketName);
+      await minioClient.putObject(bucketName, signatureFileName, signatureBuffer);
+    }
+    // Lưu thông tin đăng ký vào MongoDB
+    const client = new MongoClient(mongoUri);
+    await client.connect();
+    let chungcuName = '';
+    try {
+      const tenant = await client.db('admin').collection('tenants').findOne({ tenant_id: tenantId });
+      if (tenant && tenant.name) chungcuName = tenant.name;
+    } catch (err) { /* ignore */ }
+    const registrationData = {
+      tenant_id: tenantId,
+      personal_info: {
+        full_name: fullName,
+        phone,
+        email,
+        apartment,
+        role
+      },
+      content,
+      location,
+      ad_type: adType,
+      from_date: fromDate,
+      to_date: toDate,
+      signature: signatureFileName,
+      status: 'pending',
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+    await client.db('utility_services').collection('advertising_registers').insertOne(registrationData);
+    await client.close();
+    res.json({ success: true, message: 'Đăng ký quảng cáo thành công!', chungcuName, createdAt: registrationData.created_at });
+  } catch (error) {
+    console.error('Error processing advertising register:', error);
+    res.status(500).json({ error: 'Có lỗi xảy ra khi xử lý đăng ký quảng cáo' });
   }
 });
 
