@@ -1096,8 +1096,8 @@ router.post('/api/pets-commitment-register', upload.single('petImage'), async (r
     }
     // Lưu ảnh vật nuôi lên MinIO
     let petImageFileName = '';
+    const bucketName = 'pets-commitment-register';
     if (req.file && minioClient) {
-      const bucketName = 'pets-commitment-register';
       const bucketExists = await minioClient.bucketExists(bucketName);
       if (!bucketExists) await minioClient.makeBucket(bucketName);
       petImageFileName = `${tenantId}_${Date.now()}_pet_${req.file.originalname}`;
@@ -1107,7 +1107,6 @@ router.post('/api/pets-commitment-register', upload.single('petImage'), async (r
     let signatureFileName = '';
     if (signature && minioClient) {
       const signatureBuffer = Buffer.from(signature.replace(/^data:image\/\w+;base64,/, ''), 'base64');
-      const bucketName = 'pets-commitment-register';
       const bucketExists = await minioClient.bucketExists(bucketName);
       if (!bucketExists) await minioClient.makeBucket(bucketName);
       signatureFileName = `${tenantId}_${Date.now()}_pet_signature.png`;
@@ -1349,6 +1348,195 @@ router.post('/api/construction-register', upload.none(), async (req, res) => {
   } catch (error) {
     console.error('Error processing construction register:', error);
     res.status(500).json({ success: false, error: 'Có lỗi xảy ra khi xử lý đăng ký thi công' });
+  }
+});
+
+// API tổng hợp danh sách đăng ký dịch vụ cho tenant-dashboard (lấy tất cả collection liên quan)
+router.get('/tenant/api/registrations', async (req, res) => {
+  const tenantId = req.tenant_id;
+  if (!tenantId) return res.json([]);
+  const client = new MongoClient(mongoUri);
+  try {
+    await client.connect();
+    // Car registrations
+    const carRegs = await client.db('car_registrations').collection('registrations').find({ tenant_id: tenantId }).toArray();
+    const carRemake = await client.db('car_registrations').collection('remake_requests').find({ tenant_id: tenantId }).toArray();
+    const carCancel = await client.db('car_registrations').collection('cancel_requests').find({ tenant_id: tenantId }).toArray();
+    const carUpdate = await client.db('car_registrations').collection('update_requests').find({ tenant_id: tenantId }).toArray();
+    // Utility card
+    const utilityCards = await client.db('utility_card').collection('utility_cards').find({ apartment: { $exists: true }, fullName: { $exists: true } }).toArray();
+    const elevatorCards = await client.db('utility_card').collection('elevator_cards').find({ tenant_id: tenantId }).toArray();
+    const elevatorCancel = await client.db('utility_card').collection('elevator_cancel_requests').find({ tenant_id: tenantId }).toArray();
+    const poolRegisters = await client.db('utility_card').collection('pool_registers').find({ tenant_id: tenantId }).toArray();
+    // Utility services
+    const advertisingRegs = await client.db('utility_services').collection('advertising_registers').find({ tenant_id: tenantId }).toArray();
+    const petsRegs = await client.db('utility_services').collection('pets_commitment_register').find({ tenant_id: tenantId }).toArray();
+    const communityRoomRegs = await client.db('utility_services').collection('community_room_registers').find({ tenant_id: tenantId }).toArray();
+    const cameraCheckRegs = await client.db('utility_services').collection('camera_check_requests').find({ tenant_id: tenantId }).toArray();
+    // Moving service
+    const movingRegs = await client.db('moving_service').collection('moving_service_registers').find({ tenant_id: tenantId }).toArray();
+    // Construction
+    const constructionRegs = await client.db('construction_service').collection('construction_registers').find({ tenant_id: tenantId }).toArray();
+    // Resident info
+    const residentRegs = await client.db('resident_info').collection('resident_info_registers').find({ tenant_id: tenantId }).toArray();
+    // Gộp và chuẩn hóa dữ liệu
+    const all = [
+      ...carRegs.map(r => ({
+        service_name: 'Thẻ Xe',
+        registration_type: 'Đăng ký',
+        user_name: r.personal_info?.full_name || '',
+        user_email: r.personal_info?.email || '',
+        apartment: r.personal_info?.apartment || '',
+        created_at: r.created_at,
+        status: r.status || '',
+        file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/car-registrations/${r.cccd_files[0]}` : ''
+      })),
+      ...carRemake.map(r => ({
+        service_name: 'Thẻ Xe',
+        registration_type: 'Làm lại thẻ',
+        user_name: r.personal_info?.full_name || '',
+        user_email: r.personal_info?.email || '',
+        apartment: r.personal_info?.apartment || '',
+        created_at: r.created_at,
+        status: r.status || '',
+        file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/car-registrations/${r.cccd_files[0]}` : ''
+      })),
+      ...carCancel.map(r => ({
+        service_name: 'Thẻ Xe',
+        registration_type: 'Hủy thẻ',
+        user_name: r.personal_info?.full_name || '',
+        user_email: r.personal_info?.email || '',
+        apartment: r.personal_info?.apartment || '',
+        created_at: r.created_at,
+        status: r.status || '',
+        file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/car-cancel/${r.cccd_files[0]}` : ''
+      })),
+      ...carUpdate.map(r => ({
+        service_name: 'Thẻ Xe',
+        registration_type: 'Thay đổi thông tin',
+        user_name: r.personal_info?.full_name || '',
+        user_email: r.personal_info?.email || '',
+        apartment: r.personal_info?.apartment || '',
+        created_at: r.created_at,
+        status: r.status || '',
+        file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/car-update/${r.cccd_files[0]}` : ''
+      })),
+      ...utilityCards.filter(r => r.fullName && r.apartment).map(r => ({
+        service_name: 'Thẻ Tiện Ích',
+        registration_type: r.cardType || '',
+        user_name: r.fullName || '',
+        user_email: r.email || '',
+        apartment: r.apartment || '',
+        created_at: r.createdAt,
+        status: r.status || '',
+        file_url: ''
+      })),
+      ...elevatorCards.map(r => ({
+        service_name: 'Thẻ Thang Máy',
+        registration_type: 'Đăng ký',
+        user_name: r.full_name || '',
+        user_email: r.email || '',
+        apartment: r.apartment || '',
+        created_at: r.created_at,
+        status: r.status || '',
+        file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/elevator-cards/${r.cccd_files[0]}` : ''
+      })),
+      ...elevatorCancel.map(r => ({
+        service_name: 'Thẻ Thang Máy',
+        registration_type: 'Hủy thẻ',
+        user_name: r.full_name || '',
+        user_email: r.email || '',
+        apartment: r.apartment || '',
+        created_at: r.created_at,
+        status: r.status || '',
+        file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/elevator-cancel/${r.cccd_files[0]}` : ''
+      })),
+      ...poolRegisters.map(r => ({
+        service_name: 'Vòng Bơi',
+        registration_type: 'Đăng ký',
+        user_name: r.full_name || '',
+        user_email: r.email || '',
+        apartment: r.apartment || '',
+        created_at: r.created_at,
+        status: r.status || '',
+        file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/pool-registers/${r.cccd_files[0]}` : ''
+      })),
+      ...advertisingRegs.map(r => ({
+        service_name: 'Quảng Cáo',
+        registration_type: r.ad_type || '',
+        user_name: r.personal_info?.full_name || '',
+        user_email: r.personal_info?.email || '',
+        apartment: r.personal_info?.apartment || '',
+        created_at: r.created_at,
+        status: r.status || '',
+        file_url: ''
+      })),
+      ...petsRegs.map(r => ({
+        service_name: 'Vật Nuôi',
+        registration_type: 'Cam kết',
+        user_name: r.personal_info?.full_name || '',
+        user_email: r.personal_info?.email || '',
+        apartment: r.personal_info?.apartment || '',
+        created_at: r.created_at,
+        status: r.status || '',
+        file_url: r.pet_info?.pet_image ? `/minio/pets-commitment-register/${r.pet_info.pet_image}` : ''
+      })),
+      ...communityRoomRegs.map(r => ({
+        service_name: 'Phòng SHCĐ',
+        registration_type: 'Đăng ký',
+        user_name: r.personal_info?.full_name || '',
+        user_email: r.personal_info?.email || '',
+        apartment: r.personal_info?.apartment || '',
+        created_at: r.created_at,
+        status: r.status || '',
+        file_url: ''
+      })),
+      ...cameraCheckRegs.map(r => ({
+        service_name: 'Kiểm Tra Camera',
+        registration_type: 'Yêu cầu',
+        user_name: r.personal_info?.full_name || '',
+        user_email: r.personal_info?.email || '',
+        apartment: r.personal_info?.apartment || '',
+        created_at: r.created_at,
+        status: r.status || '',
+        file_url: ''
+      })),
+      ...movingRegs.map(r => ({
+        service_name: 'Vận Chuyển',
+        registration_type: 'Đăng ký',
+        user_name: r.full_name || '',
+        user_email: r.email || '',
+        apartment: r.apartment || '',
+        created_at: r.created_at,
+        status: r.status || '',
+        file_url: ''
+      })),
+      ...constructionRegs.map(r => ({
+        service_name: 'Thi Công Nhẹ',
+        registration_type: r.construction_type || '',
+        user_name: r.full_name || '',
+        user_email: r.email || '',
+        apartment: r.apartment || '',
+        created_at: r.created_at,
+        status: r.status || '',
+        file_url: ''
+      })),
+      ...residentRegs.map(r => ({
+        service_name: 'Thông Tin Cư Dân',
+        registration_type: 'Cập nhật',
+        user_name: r.owner?.ownerName || '',
+        user_email: r.owner?.email || '',
+        apartment: r.owner?.apartment || '',
+        created_at: r.created_at,
+        status: r.status || '',
+        file_url: ''
+      }))
+    ];
+    res.json(all.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+  } catch (err) {
+    res.json([]);
+  } finally {
+    await client.close();
   }
 });
 

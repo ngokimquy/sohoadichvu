@@ -66,7 +66,7 @@
         </div>
         <table class="reg-table" id="regTable">
           <thead>
-            <tr><th>Dịch vụ</th><th>Loại đăng ký</th><th>Người đăng ký</th><th>Email</th><th>Căn hộ</th><th>Thời gian</th><th>Trạng thái</th><th>File</th></tr>
+            <tr><th>Dịch vụ</th><th>Người đăng ký</th><th>Email</th><th>Căn hộ</th><th>Thời gian</th><th>Trạng thái</th><th>File</th></tr>
           </thead>
           <tbody id="regTableBody"></tbody>
         </table>
@@ -95,7 +95,6 @@
       body.innerHTML = regs.map(r => `
         <tr>
           <td>${r.service_name||''}</td>
-          <td>${r.registration_type||''}</td>
           <td>${r.user_name||''}</td>
           <td>${r.user_email||''}</td>
           <td>${r.apartment||''}</td>
