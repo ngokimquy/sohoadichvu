@@ -833,4 +833,76 @@ router.post('/api/elevator-card-cancel', upload.fields([
   }
 });
 
+// Đăng ký vòng bơi
+router.post('/api/pool-register', upload.fields([
+  { name: 'cccdFiles', maxCount: 10 }
+]), async (req, res) => {
+  const tenantId = req.tenant_id;
+  if (!tenantId) {
+    return res.status(400).json({ success: false, error: 'Không xác định được tenant' });
+  }
+  try {
+    const { fullName, phone, email, apartment, role, swimQuantity, signature } = req.body;
+    if (!fullName || !apartment || !phone || !role || !swimQuantity) {
+      return res.status(400).json({ success: false, error: 'Vui lòng nhập đầy đủ thông tin bắt buộc.' });
+    }
+    // Kiểm tra file CCCD
+    const cccdFiles = req.files && req.files.cccdFiles ? req.files.cccdFiles : [];
+    if (cccdFiles.length === 0) {
+      return res.status(400).json({ success: false, error: 'Vui lòng tải lên file CCCD mặt trước.' });
+    }
+    // Kiểm tra signature hợp lệ
+    if (
+      !signature ||
+      typeof signature !== 'string' ||
+      !signature.startsWith('data:image/') ||
+      !signature.includes('base64,') ||
+      signature.split('base64,')[1].trim().length < 100
+    ) {
+      return res.status(400).json({ success: false, error: 'Vui lòng ký tên xác nhận.' });
+    }
+    // Lưu file lên MinIO
+    const bucketName = 'pool-registers';
+    const bucketExists = await minioClient.bucketExists(bucketName);
+    if (!bucketExists) await minioClient.makeBucket(bucketName);
+    const cccdFileUrls = [];
+    for (const file of cccdFiles) {
+      const fileName = `${tenantId}_${Date.now()}_cccd_${file.originalname}`;
+      await minioClient.putObject(bucketName, fileName, file.buffer, file.size);
+      cccdFileUrls.push(fileName);
+    }
+    // Lưu chữ ký lên MinIO
+    const signatureBuffer = Buffer.from(signature.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+    const signatureFileName = `${tenantId}_${Date.now()}_signature.png`;
+    await minioClient.putObject(bucketName, signatureFileName, signatureBuffer);
+    // Lưu thông tin đăng ký vào MongoDB (db: utility_card, collection: pool_registers)
+    const client = new MongoClient(mongoUri);
+    await client.connect();
+    let chungcuName = '';
+    try {
+      const tenant = await client.db('admin').collection('tenants').findOne({ tenant_id: tenantId });
+      if (tenant && tenant.name) chungcuName = tenant.name;
+    } catch (err) { /* ignore */ }
+    const registrationData = {
+      tenant_id: tenantId,
+      full_name: fullName,
+      phone,
+      email,
+      apartment,
+      role,
+      swim_quantity: Number(swimQuantity),
+      cccd_files: cccdFileUrls,
+      signature: signatureFileName,
+      status: 'pending',
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+    await client.db('utility_card').collection('pool_registers').insertOne(registrationData);
+    await client.close();
+    res.json({ success: true, message: 'Đăng ký vòng bơi thành công!', chungcuName, createdAt: registrationData.created_at });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Không thể lưu đăng ký. Vui lòng thử lại sau.' });
+  }
+});
+
 module.exports = router;
