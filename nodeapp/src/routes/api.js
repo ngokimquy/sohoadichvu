@@ -1187,4 +1187,64 @@ router.post('/api/community-room-register', upload.none(), async (req, res) => {
   }
 });
 
+// API lưu thông tin đăng ký cư dân
+router.post('/api/resident-info-register', upload.none(), async (req, res) => {
+  const tenantId = req.tenant_id;
+  if (!tenantId) {
+    return res.status(400).json({ error: 'Không xác định được tenant' });
+  }
+  try {
+    const { ownerName, apartment, phone, email, role } = req.body;
+    // Lấy danh sách thành viên (nếu có)
+    let members = [];
+    if (Array.isArray(req.body['memberName[]'])) {
+      // Nhiều thành viên
+      const names = req.body['memberName[]'];
+      const dobs = req.body['memberDob[]'] || [];
+      const relations = req.body['memberRelation[]'] || [];
+      const ids = req.body['memberId[]'] || [];
+      for (let i = 0; i < names.length; i++) {
+        if (names[i] || dobs[i] || relations[i] || ids[i]) {
+          members.push({
+            name: names[i] || '',
+            dob: dobs[i] || '',
+            relation: relations[i] || '',
+            id: ids[i] || ''
+          });
+        }
+      }
+    } else if (req.body['memberName[]']) {
+      // Một thành viên
+      members.push({
+        name: req.body['memberName[]'] || '',
+        dob: req.body['memberDob[]'] || '',
+        relation: req.body['memberRelation[]'] || '',
+        id: req.body['memberId[]'] || ''
+      });
+    }
+    // Lưu vào MongoDB
+    const client = new MongoClient(mongoUri);
+    await client.connect();
+    let chungcuName = '';
+    try {
+      const tenant = await client.db('admin').collection('tenants').findOne({ tenant_id: tenantId });
+      if (tenant && tenant.name) chungcuName = tenant.name;
+    } catch (err) { /* ignore */ }
+    const registrationData = {
+      tenant_id: tenantId,
+      owner: { ownerName, apartment, phone, email, role },
+      members,
+      status: 'pending',
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+    await client.db('utility_services').collection('resident_info_registers').insertOne(registrationData);
+    await client.close();
+    res.json({ success: true, message: 'Đăng ký thông tin cư dân thành công!', chungcuName, createdAt: registrationData.created_at });
+  } catch (error) {
+    console.error('Error processing resident info register:', error);
+    res.status(500).json({ error: 'Có lỗi xảy ra khi xử lý đăng ký thông tin cư dân' });
+  }
+});
+
 module.exports = router;
