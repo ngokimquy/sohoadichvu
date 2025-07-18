@@ -37,6 +37,8 @@
     .btn-secondary:hover { background: #5a6268; }
     .btn-success { background: #28a745; color: white; width: 100%; font-size: 18px; padding: 15px; }
     .btn-success:hover { background: #218838; }
+    .add-vehicle-btn { background: #8B5CF6; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; transition: background 0.3s ease; display: inline-block; margin-top: 10px; }
+    .add-vehicle-btn:hover { background: #A855F7; }
     @media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } .form-container { padding: 20px; } }
   </style>
 </head>
@@ -90,6 +92,12 @@
           <h2 class="section-title">Thông Tin Xe</h2>
           <div id="vehicleList" class="vehicle-list"></div>
           <button type="button" class="add-vehicle-btn" onclick="addVehicle()">+ Thêm Xe</button>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="cancelDate">Ngày hủy thẻ xe</label>
+              <input type="date" id="cancelDate" name="cancelDate" required>
+            </div>
+          </div>
         </div>
         
         <!-- Upload files -->
