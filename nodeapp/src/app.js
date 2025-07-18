@@ -7,12 +7,14 @@ const adminRoutes = require('./routes/admin');
 const apiRoutes = require('./routes/api');
 const khoiTaoThongSo = require('./utils/khoitaothongso');
 const tenantRoutes = require('./routes/tenant');
+const path = require('path');
 
 app.use(express.json());
 app.use(cookieParser());
 app.use(session({ secret: 'your-secret', resave: false, saveUninitialized: true }));
 app.use(tenantMiddleware);
 
+app.use('/static', express.static(path.join(__dirname, '..', 'static')));
 app.use('/', apiRoutes);
 app.use('/admin', adminRoutes);
 app.use('/khoitaothongso', khoiTaoThongSo);

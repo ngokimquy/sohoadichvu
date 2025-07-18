@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Đăng Ký Sử Dụng Phòng Sinh Hoạt Cộng Đồng</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* Copy toàn bộ style từ advertising-register.html */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px; }
+    .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); overflow: hidden; }
+    .header { background: linear-gradient(135deg, #0984e3, #00b894); color: white; text-align: center; padding: 30px 20px; }
+    .header h1 { font-size: 2em; margin-bottom: 10px; }
+    .form-container { padding: 40px; }
+    .section { margin-bottom: 40px; }
+    .section-title { font-size: 1.3em; color: #333; margin-bottom: 20px; font-weight: bold; border-bottom: 2px solid #0984e3; padding-bottom: 10px; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
+    .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 16px; transition: border-color 0.3s ease; }
+    .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #0984e3; }
+    .file-upload { border: 2px dashed #0984e3; border-radius: 10px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.3s ease; }
+    .file-upload:hover { background-color: #f8f9fa; }
+    .file-upload input[type="file"] { display: none; }
+    .file-upload-icon { font-size: 3em; color: #0984e3; margin-bottom: 10px; }
+    .file-upload-text { color: #666; font-size: 14px; }
+    .file-preview { margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px; display: none; }
+    .signature-section { border: 2px solid #e9ecef; border-radius: 10px; padding: 20px; text-align: center; }
+    .signature-canvas { border: 1px solid #ddd; border-radius: 5px; cursor: crosshair; width: 400px; height: 200px; max-width: 100%; display: block; margin: 0 auto; }
+    @media (max-width: 600px) { .signature-canvas { width: 100% !important; min-width: 220px; height: 320px !important; max-width: 100vw; } }
+    .signature-buttons { margin-top: 15px; }
+    .btn { padding: 12px 30px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; margin: 5px; }
+    .btn-primary { background: #0984e3; color: white; }
+    .btn-primary:hover { background: #00b894; }
+    .btn-secondary { background: #6c757d; color: white; }
+    .btn-secondary:hover { background: #5a6268; }
+    .btn-success { background: #28a745; color: white; width: 100%; font-size: 18px; padding: 15px; }
+    .btn-success:hover { background: #218838; }
+    @media (max-width: 768px) { .form-container { padding: 20px; } }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 768px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+    .form-row .form-group { margin-bottom: 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Đăng Ký Sử Dụng Phòng Sinh Hoạt Cộng Đồng</h1>
+      <p>Vui lòng điền đầy đủ thông tin để đăng ký sử dụng phòng sinh hoạt cộng đồng</p>
+    </div>
+    <div class="form-container">
+      <form id="communityRoomForm" enctype="multipart/form-data">
+        <div class="section">
+          <h2 class="section-title">Thông Tin Cá Nhân</h2>
+          <div class="form-row form-row-3col">
+            <div class="form-group">
+              <label for="fullName" style="font-size: 14px; min-width: 80px;">Họ và Tên</label>
+              <input type="text" id="fullName" name="fullName" required>
+            </div>
+            <div class="form-group">
+              <label for="phone" style="font-size: 14px; min-width: 80px;">Số ĐT</label>
+              <input type="tel" id="phone" name="phone" required>
+            </div>
+            <div class="form-group">
+              <label for="email" style="font-size: 14px; min-width: 80px;">Email</label>
+              <input type="email" id="email" name="email">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="apartment">Số Căn Hộ</label>
+              <input type="text" id="apartment" name="apartment" required>
+            </div>
+            <div class="form-group">
+              <label for="role">Vai Trò Trong Căn Hộ</label>
+              <select id="role" name="role" required style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 16px; background: #fff; color: #333; transition: border-color 0.3s ease; appearance: none; -webkit-appearance: none;">
+                <option value="" disabled selected hidden>-- Vui lòng chọn vai trò --</option>
+                <option value="chu_ho">Chủ Hộ</option>
+                <option value="khach_thue">Khách Thuê</option>
+                <option value="khac">Khác</option>
+              </select>
+              <span style="position: absolute; right: 18px; top: 50%; transform: translateY(-50%); pointer-events: none; font-size: 18px; color: #888;">▼</span>
+            </div>
+          </div>
+        </div>
+        <div class="section">
+          <h2 class="section-title">Thông Tin Đăng Ký Sử Dụng</h2>
+          <div class="form-group">
+            <label for="purpose">Mục đích sử dụng</label>
+            <textarea id="purpose" name="purpose" rows="4" required placeholder="Ví dụ: Tổ chức sinh nhật, họp mặt cư dân, hội thảo, lớp học..."></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="date">Ngày sử dụng</label>
+              <input type="date" id="date" name="date" required>
+            </div>
+            <div class="form-group">
+              <label for="time">Khung giờ sử dụng</label>
+              <input type="text" id="time" name="time" required placeholder="Ví dụ: 08:00 - 12:00, 14:00 - 17:00">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="attendees">Số lượng người tham dự (ước tính)</label>
+            <input type="number" id="attendees" name="attendees" min="1" required>
+          </div>
+          <div class="form-group">
+            <label for="note">Ghi chú thêm (nếu có)</label>
+            <textarea id="note" name="note" rows="2" placeholder="Ghi chú thêm về thiết bị, setup, yêu cầu đặc biệt..."></textarea>
+          </div>
+        </div>
+        <div class="section">
+          <h2 class="section-title">Chữ Ký Xác Nhận</h2>
+          <div class="signature-section">
+            <p style="margin-bottom: 15px;">Vui lòng ký tên để xác nhận thông tin:</p>
+            <canvas id="signatureCanvas" class="signature-canvas" width="400" height="200"></canvas>
+            <div class="signature-buttons">
+              <button type="button" class="btn btn-secondary" onclick="clearSignature()">Xóa Chữ Ký</button>
+            </div>
+          </div>
+        </div>
+        <div class="section">
+          <button type="submit" class="btn btn-success">Gửi Đăng Ký</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script src="/static/js/community-room-register.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</body>
+</html>

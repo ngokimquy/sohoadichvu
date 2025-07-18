@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Đăng Ký Thông Tin Cư Dân</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 700px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 8px 32px rgba(80, 80, 180, 0.10);
+      padding: 40px 30px 30px 30px;
+    }
+    h2 {
+      text-align: center;
+      color: #7c3aed;
+      margin-bottom: 30px;
+      font-size: 2em;
+      font-weight: 700;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: 600;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 18px;
+      border: 1.5px solid #e0e7ff;
+      border-radius: 8px;
+      font-size: 1em;
+      background: #f8fafc;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #7c3aed;
+      outline: none;
+    }
+    .members-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 18px;
+    }
+    .members-table th, .members-table td {
+      border: 1px solid #e0e7ff;
+      padding: 10px 8px;
+      text-align: left;
+      font-size: 1em;
+    }
+    .members-table th {
+      background: #ede9fe;
+      color: #7c3aed;
+      font-weight: 700;
+    }
+    .add-member-btn {
+      background: linear-gradient(90deg, #7c3aed, #a78bfa);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 22px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 18px;
+      transition: background 0.2s;
+    }
+    .add-member-btn:hover {
+      background: linear-gradient(90deg, #a78bfa, #7c3aed);
+    }
+    .remove-member-btn {
+      background: #f87171;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 0.95em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .remove-member-btn:hover {
+      background: #ef4444;
+    }
+    .submit-btn {
+      background: linear-gradient(90deg, #7c3aed, #a78bfa);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 14px 0;
+      font-size: 1.15em;
+      font-weight: 700;
+      width: 100%;
+      margin-top: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .submit-btn:hover {
+      background: linear-gradient(90deg, #a78bfa, #7c3aed);
+    }
+    .section-title {
+      color: #6366f1;
+      font-size: 1.15em;
+      font-weight: 600;
+      margin-bottom: 10px;
+      margin-top: 30px;
+    }
+    @media (max-width: 600px) {
+      .container { padding: 18px 5px; }
+      h2 { font-size: 1.3em; }
+      .members-table th, .members-table td { font-size: 0.95em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Đăng Ký Thông Tin Cư Dân</h2>
+    <form id="residentInfoForm">
+      <div class="section-title">Thông Tin Chủ Hộ</div>
+      <label for="ownerName">Họ và tên chủ hộ</label>
+      <input type="text" id="ownerName" name="ownerName" required>
+      <label for="apartment">Số căn hộ</label>
+      <input type="text" id="apartment" name="apartment" required>
+      <label for="phone">Số điện thoại liên hệ</label>
+      <input type="tel" id="phone" name="phone" required pattern="[0-9]{10,11}">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email">
+      <div class="section-title">Thành Viên Trong Căn Hộ</div>
+      <button type="button" class="add-member-btn" onclick="addMemberRow()">+ Thêm thành viên</button>
+      <table class="members-table" id="membersTable">
+        <thead>
+          <tr>
+            <th>Họ và tên</th>
+            <th>Ngày sinh</th>
+            <th>Quan hệ với chủ hộ</th>
+            <th>CMND/CCCD</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Member rows will be added here -->
+        </tbody>
+      </table>
+      <div class="section-title">Liên Hệ Khẩn Cấp</div>
+      <label for="emergencyName">Người liên hệ khẩn cấp</label>
+      <input type="text" id="emergencyName" name="emergencyName" required>
+      <label for="emergencyPhone">Số điện thoại khẩn cấp</label>
+      <input type="tel" id="emergencyPhone" name="emergencyPhone" required pattern="[0-9]{10,11}">
+      <label for="emergencyRelation">Quan hệ với chủ hộ</label>
+      <input type="text" id="emergencyRelation" name="emergencyRelation" required>
+      <button type="submit" class="submit-btn">Gửi Đăng Ký</button>
+    </form>
+  </div>
+  <script>
+    function addMemberRow() {
+      const tbody = document.getElementById('membersTable').querySelector('tbody');
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td style="padding:8px 4px;"><input type="text" name="memberName[]" required style="width:100%;padding:8px 10px;margin:0 0 4px 0;border-radius:6px;border:1px solid #e0e7ff;background:#f8fafc;"></td>
+        <td style="padding:8px 4px;"><input type="date" name="memberDob[]" required style="width:100%;padding:8px 10px;margin:0 0 4px 0;border-radius:6px;border:1px solid #e0e7ff;background:#f8fafc;"></td>
+        <td style="padding:8px 4px;"><input type="text" name="memberRelation[]" required style="width:100%;padding:8px 10px;margin:0 0 4px 0;border-radius:6px;border:1px solid #e0e7ff;background:#f8fafc;"></td>
+        <td style="padding:8px 4px;"><input type="text" name="memberId[]" required style="width:100%;padding:8px 10px;margin:0 0 4px 0;border-radius:6px;border:1px solid #e0e7ff;background:#f8fafc;"></td>
+        <td style="text-align:center;"><button type="button" class="remove-member-btn" onclick="removeMemberRow(this)">Xóa</button></td>
+      `;
+      tbody.appendChild(row);
+    }
+    function removeMemberRow(btn) {
+      btn.closest('tr').remove();
+    }
+    // Optional: Add at least 1 member row by default
+    window.onload = function() { addMemberRow(); };
+    // Xử lý submit (chỉ demo, chưa gửi API)
+    document.getElementById('residentInfoForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      alert('Đăng ký thông tin cư dân thành công! (Demo)');
+      this.reset();
+      const tbody = document.getElementById('membersTable').querySelector('tbody');
+      tbody.innerHTML = '';
+      addMemberRow();
+    });
+  </script>
+</body>
+</html>

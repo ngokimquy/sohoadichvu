@@ -52,6 +52,19 @@ router.get('/tenants/:service?/:subservice?', async (req, res) => {
       // Bỏ qua lỗi, chỉ không hiện tên
     }
   }
+
+  if (service === 'resident-info-register') {
+
+      const htmlPath = path.join(__dirname, '..', 'views', 'resident-info-register.html');
+    fs.readFile(htmlPath, 'utf8', (err, html) => {
+      if (err) return res.status(500).send('Lỗi đọc giao diện');
+      res.send(html.replace('{{chungcuName}}', chungcuName ? chungcuName : ''));
+    });
+    return;
+
+
+
+  }
   
   // Nếu service là car-registration, hiển thị trang dịch vụ thẻ xe
   if (service === 'car-registration') {
@@ -103,6 +116,8 @@ router.get('/tenants/:service?/:subservice?', async (req, res) => {
     });
     return;
   }
+
+  
   
   // Nếu service là utility-services, hiển thị trang dịch vụ tiện ích và các subservice con
   if (service === 'utility-services') {
@@ -125,23 +140,24 @@ router.get('/tenants/:service?/:subservice?', async (req, res) => {
       return;
     }
     // Subservice: pet-commitment-register
-    if (subservice === 'pet-commitment-register') {
-      const htmlPath = path.join(__dirname, '..', 'views', 'pet-commitment-register.html');
+    if (subservice === 'pets-commitment-register') {
+      const htmlPath = path.join(__dirname, '..', 'views', 'pets-commitment-register.html');
       fs.readFile(htmlPath, 'utf8', (err, html) => {
         if (err) return res.status(500).send('Lỗi đọc giao diện');
         res.send(html.replace('{{chungcuName}}', chungcuName ? chungcuName : ''));
       });
       return;
     }
-    // Subservice: resident-info-form
-    if (subservice === 'resident-info-form') {
-      const htmlPath = path.join(__dirname, '..', 'views', 'resident-info-form.html');
+       if (subservice === 'community-room-register') {
+      const htmlPath = path.join(__dirname, '..', 'views', 'community-room-register.html');
       fs.readFile(htmlPath, 'utf8', (err, html) => {
         if (err) return res.status(500).send('Lỗi đọc giao diện');
         res.send(html.replace('{{chungcuName}}', chungcuName ? chungcuName : ''));
       });
       return;
     }
+    // Subservice: resident-info-register
+  
     // Nếu không có subservice hoặc subservice không khớp, trả về trang mẹ utility-services
     const htmlPath = path.join(__dirname, '..', 'views', 'utility-services.html');
     fs.readFile(htmlPath, 'utf8', (err, html) => {
@@ -180,6 +196,8 @@ router.get('/tenants/:service?/:subservice?', async (req, res) => {
       });
       return;
     }
+    // Subservice: community-room-register
+ 
     // ...có thể bổ sung thêm các subservice khác ở đây...
     // Nếu không có subservice hoặc subservice không khớp, trả về trang mẹ utility-card
     const htmlPath = path.join(__dirname, '..', 'views', 'utility-card.html');
@@ -985,6 +1003,187 @@ router.post('/api/advertising-register', upload.none(), async (req, res) => {
   } catch (error) {
     console.error('Error processing advertising register:', error);
     res.status(500).json({ error: 'Có lỗi xảy ra khi xử lý đăng ký quảng cáo' });
+  }
+});
+
+// API xử lý đăng ký yêu cầu kiểm tra camera
+router.post('/api/camera-check-request', upload.none(), async (req, res) => {
+  const tenantId = req.tenant_id;
+  if (!tenantId) {
+    return res.status(400).json({ error: 'Không xác định được tenant' });
+  }
+  try {
+    const { fullName, phone, email, apartment, role, cameraLocation, requestReason, fromDate, toDate, signature } = req.body;
+    if (!fullName || !phone || !apartment || !role || !cameraLocation || !requestReason || !fromDate || !toDate || !signature) {
+      return res.status(400).json({ error: 'Vui lòng nhập đầy đủ thông tin bắt buộc.' });
+    }
+    // Lưu chữ ký (base64) vào MinIO nếu có
+    let signatureFileName = '';
+    if (signature && minioClient) {
+      const signatureBuffer = Buffer.from(signature.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+      const bucketName = 'camera-check-request';
+      const bucketExists = await minioClient.bucketExists(bucketName);
+      if (!bucketExists) await minioClient.makeBucket(bucketName);
+      signatureFileName = `${tenantId}_${Date.now()}_camera_signature.png`;
+      await minioClient.putObject(bucketName, signatureFileName, signatureBuffer);
+    }
+    // Lưu thông tin đăng ký vào MongoDB
+    const client = new MongoClient(mongoUri);
+    await client.connect();
+    let chungcuName = '';
+    try {
+      const tenant = await client.db('admin').collection('tenants').findOne({ tenant_id: tenantId });
+      if (tenant && tenant.name) chungcuName = tenant.name;
+    } catch (err) { /* ignore */ }
+    const requestData = {
+      tenant_id: tenantId,
+      personal_info: {
+        full_name: fullName,
+        phone,
+        email,
+        apartment,
+        role
+      },
+      camera_location: cameraLocation,
+      request_reason: requestReason,
+      from_date: fromDate,
+      to_date: toDate,
+      signature: signatureFileName,
+      status: 'pending',
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+    await client.db('utility_services').collection('camera_check_requests').insertOne(requestData);
+    await client.close();
+    res.json({ success: true, message: 'Gửi yêu cầu kiểm tra camera thành công!', chungcuName, createdAt: requestData.created_at });
+  } catch (error) {
+    console.error('Error processing camera check request:', error);
+    res.status(500).json({ error: 'Có lỗi xảy ra khi xử lý yêu cầu kiểm tra camera' });
+  }
+});
+
+// API đăng ký & cam kết vật nuôi
+router.post('/api/pets-commitment-register', upload.single('petImage'), async (req, res) => {
+  const tenantId = req.tenant_id;
+  if (!tenantId) {
+    return res.status(400).json({ error: 'Không xác định được tenant' });
+  }
+  try {
+    // Lấy thông tin từ form
+    const { fullName, phone, email, apartment, role, petType, petQuantity, petReason, signature } = req.body;
+    if (!fullName || !phone || !apartment || !role || !petType || !petQuantity || !signature) {
+      return res.status(400).json({ error: 'Vui lòng nhập đầy đủ thông tin bắt buộc.' });
+    }
+    // Lưu ảnh vật nuôi lên MinIO
+    let petImageFileName = '';
+    if (req.file && minioClient) {
+      const bucketName = 'pets-commitment-register';
+      const bucketExists = await minioClient.bucketExists(bucketName);
+      if (!bucketExists) await minioClient.makeBucket(bucketName);
+      petImageFileName = `${tenantId}_${Date.now()}_pet_${req.file.originalname}`;
+      await minioClient.putObject(bucketName, petImageFileName, req.file.buffer);
+    }
+    // Lưu chữ ký (base64) lên MinIO
+    let signatureFileName = '';
+    if (signature && minioClient) {
+      const signatureBuffer = Buffer.from(signature.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+      const bucketName = 'pets-commitment-register';
+      const bucketExists = await minioClient.bucketExists(bucketName);
+      if (!bucketExists) await minioClient.makeBucket(bucketName);
+      signatureFileName = `${tenantId}_${Date.now()}_pet_signature.png`;
+      await minioClient.putObject(bucketName, signatureFileName, signatureBuffer);
+    }
+    // Lưu thông tin đăng ký vào MongoDB
+    const client = new MongoClient(mongoUri);
+    await client.connect();
+    let chungcuName = '';
+    try {
+      const tenant = await client.db('admin').collection('tenants').findOne({ tenant_id: tenantId });
+      if (tenant && tenant.name) chungcuName = tenant.name;
+    } catch (err) { /* ignore */ }
+    const requestData = {
+      tenant_id: tenantId,
+      personal_info: {
+        full_name: fullName,
+        phone,
+        email,
+        apartment,
+        role
+      },
+      pet_info: {
+        pet_type: petType,
+        pet_quantity: petQuantity,
+        pet_reason: petReason,
+        pet_image: petImageFileName
+      },
+      signature: signatureFileName,
+      status: 'pending',
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+    await client.db('utility_services').collection('pets_commitment_register').insertOne(requestData);
+    await client.close();
+    res.json({ success: true, message: 'Gửi cam kết vật nuôi thành công!', chungcuName, createdAt: requestData.created_at });
+  } catch (error) {
+    console.error('Error processing pets commitment register:', error);
+    res.status(500).json({ error: 'Có lỗi xảy ra khi xử lý đăng ký vật nuôi' });
+  }
+});
+
+// Đăng ký sử dụng phòng sinh hoạt cộng đồng
+router.post('/api/community-room-register', upload.none(), async (req, res) => {
+  const tenantId = req.tenant_id;
+  if (!tenantId) {
+    return res.status(400).json({ error: 'Không xác định được tenant' });
+  }
+  try {
+    const { fullName, phone, email, apartment, role, purpose, date, time, attendees, note, signature } = req.body;
+    if (!fullName || !phone || !apartment || !role || !purpose || !date || !time || !attendees || !signature) {
+      return res.status(400).json({ error: 'Vui lòng nhập đầy đủ thông tin bắt buộc.' });
+    }
+    // Lưu chữ ký (base64) vào MinIO nếu có
+    let signatureFileName = '';
+    if (signature && minioClient) {
+      const signatureBuffer = Buffer.from(signature.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+      signatureFileName = `${tenantId}_${Date.now()}_community_signature.png`;
+      const bucketName = 'community-room-register';
+      const bucketExists = await minioClient.bucketExists(bucketName);
+      if (!bucketExists) await minioClient.makeBucket(bucketName);
+      await minioClient.putObject(bucketName, signatureFileName, signatureBuffer);
+    }
+    // Lưu thông tin đăng ký vào MongoDB
+    const client = new MongoClient(mongoUri);
+    await client.connect();
+    let chungcuName = '';
+    try {
+      const tenant = await client.db('admin').collection('tenants').findOne({ tenant_id: tenantId });
+      if (tenant && tenant.name) chungcuName = tenant.name;
+    } catch (err) { /* ignore */ }
+    const registrationData = {
+      tenant_id: tenantId,
+      personal_info: {
+        full_name: fullName,
+        phone,
+        email,
+        apartment,
+        role
+      },
+      purpose,
+      date,
+      time,
+      attendees,
+      note,
+      signature: signatureFileName,
+      status: 'pending',
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+    await client.db('utility_services').collection('community_room_registers').insertOne(registrationData);
+    await client.close();
+    res.json({ success: true, message: 'Đăng ký sử dụng phòng sinh hoạt cộng đồng thành công!', chungcuName, createdAt: registrationData.created_at });
+  } catch (error) {
+    console.error('Error processing community room register:', error);
+    res.status(500).json({ error: 'Có lỗi xảy ra khi xử lý đăng ký phòng sinh hoạt cộng đồng' });
   }
 });
 
