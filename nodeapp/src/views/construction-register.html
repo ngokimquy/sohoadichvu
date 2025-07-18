@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Đăng Ký Thi Công</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+    .container { max-width: 800px; margin: 0 auto; background: #fff; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); overflow: hidden; }
+    .header { background: linear-gradient(135deg, #8B5CF6, #A855F7); color: #fff; text-align: center; padding: 30px 20px; }
+    .header h1 { font-size: 2em; margin-bottom: 10px; }
+    .form-container { padding: 40px; }
+    .section { margin-bottom: 40px; }
+    .section-title { font-size: 1.3em; color: #333; margin-bottom: 20px; font-weight: bold; border-bottom: 2px solid #8B5CF6; padding-bottom: 10px; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 16px; transition: border-color 0.3s ease; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #8B5CF6; outline: none; }
+    .submit-btn { background: linear-gradient(90deg, #7c3aed, #a78bfa); color: #fff; border: none; border-radius: 8px; padding: 14px 0; font-size: 1.15em; font-weight: 700; width: 100%; margin-top: 10px; cursor: pointer; transition: background 0.2s; }
+    .submit-btn:hover { background: linear-gradient(90deg, #a78bfa, #7c3aed); }
+    @media (max-width: 600px) { .container { padding: 0; } .form-container { padding: 18px 5px; } .header h1 { font-size: 1.3em; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Đăng Ký Thi Công</h1>
+      <p>Điền thông tin để đăng ký thi công, sửa chữa, cải tạo căn hộ</p>
+    </div>
+    <div class="form-container">
+      <form id="constructionForm">
+        <div class="section">
+          <div class="section-title">Thông Tin Người Đăng Ký</div>
+          <div class="form-group">
+            <label for="fullName">Họ và tên</label>
+            <input type="text" id="fullName" name="fullName" required>
+          </div>
+          <div class="form-group">
+            <label for="apartment">Số căn hộ</label>
+            <input type="text" id="apartment" name="apartment" required>
+          </div>
+          <div class="form-group">
+            <label for="phone">Số điện thoại liên hệ</label>
+            <input type="tel" id="phone" name="phone" required pattern="[0-9]{10,11}">
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email">
+          </div>
+          <div class="form-group">
+            <label for="role">Vai trò trong căn hộ</label>
+            <select id="role" name="role" required>
+              <option value="">-- Chọn vai trò --</option>
+              <option value="Chủ hộ">Chủ hộ</option>
+              <option value="Thành viên">Thành viên</option>
+              <option value="Khách thuê">Khách thuê</option>
+              <option value="Khác">Khác</option>
+            </select>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Thông Tin Thi Công</div>
+          <div class="form-group">
+            <label for="constructionType">Loại công việc</label>
+            <select id="constructionType" name="constructionType" required>
+              <option value="">-- Chọn loại công việc --</option>
+              <option value="Sửa chữa">Sửa chữa</option>
+              <option value="Cải tạo">Cải tạo</option>
+              <option value="Trang trí nội thất">Trang trí nội thất</option>
+              <option value="Khác">Khác</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="description">Mô tả chi tiết công việc</label>
+            <textarea id="description" name="description" rows="3" required placeholder="Ví dụ: Sơn lại phòng khách, lắp đặt điều hòa, thay sàn gỗ..."></textarea>
+            <div style="color:#888;font-size:0.98em;margin-top:4px;">Nhập chi tiết: ví dụ sơn lại phòng khách, lắp đặt điều hòa, thay sàn gỗ...</div>
+          </div>
+          <div class="form-group">
+            <label for="startDate">Ngày bắt đầu</label>
+            <input type="date" id="startDate" name="startDate" required>
+          </div>
+          <div class="form-group">
+            <label for="endDate">Ngày kết thúc dự kiến</label>
+            <input type="date" id="endDate" name="endDate" required>
+          </div>
+          <div class="form-group">
+            <label for="note">Ghi chú thêm (nếu có)</label>
+            <textarea id="note" name="note" rows="2"></textarea>
+          </div>
+        </div>
+        <button type="submit" class="submit-btn">Gửi Đăng Ký</button>
+      </form>
+    </div>
+  </div>
+  <!-- Popup xác nhận thành công -->
+  <div id="successPopup" style="display:none;position:fixed;z-index:9999;left:0;top:0;width:100vw;height:100vh;background:rgba(60,60,100,0.18);backdrop-filter:blur(1.5px);align-items:center;justify-content:center;">
+    <div id="popupContent" style="background:#fff;border-radius:18px;box-shadow:0 8px 32px rgba(80,80,180,0.13);padding:38px 30px 28px 30px;max-width:420px;text-align:center;position:relative;">
+      <div style="font-size:2.2em;color:#22c55e;margin-bottom:10px;">✔️</div>
+      <div style="font-size:1.18em;font-weight:700;color:#4f46e5;margin-bottom:10px;">Đăng ký thi công thành công!</div>
+      <div id="popupInfo" style="font-size:1em;color:#333;text-align:left;margin:0 auto 12px auto;max-width:340px;"></div>
+      <button onclick="downloadRegistrationInfo()" style="background:linear-gradient(90deg,#7c3aed,#a78bfa);color:#fff;border:none;border-radius:8px;padding:10px 32px;font-size:1em;font-weight:600;cursor:pointer;">Tải xuống thông tin</button>
+      <button onclick="closeSuccessPopup()" style="margin-left:10px;background:#e0e7ff;color:#4f46e5;border:none;border-radius:8px;padding:10px 32px;font-size:1em;font-weight:600;cursor:pointer;">Đóng</button>
+      <button onclick="closeSuccessPopup()" style="position:absolute;top:10px;right:14px;background:none;border:none;font-size:1.3em;color:#888;cursor:pointer;">×</button>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script>
+    function showSuccessPopup(info) {
+      let html = '';
+      if (info) {
+        html += `<b>Họ tên:</b> ${info.fullName || ''}<br>`;
+        html += `<b>Số căn hộ:</b> ${info.apartment || ''}<br>`;
+        html += `<b>Số điện thoại:</b> ${info.phone || ''}<br>`;
+        html += `<b>Email:</b> ${info.email || ''}<br>`;
+        html += `<b>Vai trò:</b> ${info.role || ''}<br>`;
+        html += `<b>Loại công việc:</b> ${info.constructionType || ''}<br>`;
+        html += `<b>Mô tả:</b> ${info.description || ''}<br>`;
+        html += `<b>Ngày bắt đầu:</b> ${info.startDate || ''}<br>`;
+        html += `<b>Ngày kết thúc:</b> ${info.endDate || ''}<br>`;
+        if (info.note) html += `<b>Ghi chú:</b> ${info.note}<br>`;
+      }
+      document.getElementById('popupInfo').innerHTML = html;
+      document.getElementById('successPopup').style.display = 'flex';
+      window._lastRegistrationInfo = info;
+    }
+    function closeSuccessPopup() {
+      document.getElementById('successPopup').style.display = 'none';
+      window.location.href = '/tenants';
+    }
+    function downloadRegistrationInfo() {
+      const popupContent = document.getElementById('popupContent');
+      if (!popupContent) return;
+      html2canvas(popupContent).then(function(canvas) {
+        const link = document.createElement('a');
+        link.download = 'thong-tin-dang-ky-thi-cong.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+    document.getElementById('constructionForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const form = this;
+      const data = {
+        fullName: form.fullName.value,
+        apartment: form.apartment.value,
+        phone: form.phone.value,
+        email: form.email.value,
+        role: form.role.value,
+        constructionType: form.constructionType.value,
+        description: form.description.value,
+        startDate: form.startDate.value,
+        endDate: form.endDate.value,
+        note: form.note.value
+      };
+      try {
+        const res = await fetch('/api/construction-register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (result.success) {
+          showSuccessPopup(data);
+          form.reset();
+        } else {
+          alert(result.error || 'Đăng ký thất bại, vui lòng thử lại!');
+        }
+      } catch (err) {
+        alert('Không thể gửi đăng ký. Vui lòng kiểm tra kết nối mạng hoặc thử lại sau!');
+      }
+    });
+  </script>
+</body>
+</html>
