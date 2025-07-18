@@ -125,6 +125,16 @@ router.get('/tenants/:service?/:subservice?', async (req, res) => {
     return;
   }
   
+  // Nếu service là utility-card, hiển thị trang đăng ký thẻ tiện ích khác
+  if (service === 'utility-card') {
+    const htmlPath = path.join(__dirname, '..', 'views', 'utility-card.html');
+    fs.readFile(htmlPath, 'utf8', (err, html) => {
+      if (err) return res.status(500).send('Lỗi đọc giao diện');
+      res.send(html.replace('{{chungcuName}}', chungcuName ? chungcuName : ''));
+    });
+    return;
+  }
+  
   // Mặc định hiển thị trang chính
   const htmlPath = path.join(__dirname, '..', 'views', 'tenant-register.html');
   fs.readFile(htmlPath, 'utf8', (err, html) => {
@@ -626,6 +636,26 @@ router.post('/api/car-update', upload.fields([
   } catch (error) {
     console.error('Error processing car update:', error);
     res.status(500).json({ error: 'Có lỗi xảy ra khi xử lý yêu cầu thay đổi thông tin xe' });
+  }
+});
+
+// Xử lý đăng ký thẻ tiện ích khác
+router.post('/api/utility-card', express.urlencoded({ extended: true }), async (req, res) => {
+  const { fullName, apartment, cardType, phone, email, note } = req.body;
+  if (!fullName || !apartment || !cardType || !phone) {
+    return res.status(400).json({ success: false, error: 'Vui lòng nhập đầy đủ thông tin bắt buộc.' });
+  }
+  try {
+    const client = new MongoClient(mongoUri);
+    await client.connect();
+    const collection = client.db('admin').collection('utility_cards');
+    await collection.insertOne({
+      fullName, apartment, cardType, phone, email, note, createdAt: new Date()
+    });
+    await client.close();
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Không thể lưu đăng ký. Vui lòng thử lại sau.' });
   }
 });
 

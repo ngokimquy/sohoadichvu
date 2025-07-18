@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dịch Vụ Thẻ Khác</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; }
+    .header { background: linear-gradient(135deg, #00b894, #00cec9); color: #fff; text-align: center; padding: 40px 20px; }
+    .header h1 { font-size: 2.2em; margin-bottom: 10px; }
+    .header p { font-size: 1.1em; opacity: 0.9; }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    .main-title {
+      text-align: center;
+      font-size: 2.5em;
+      color: #222;
+      margin: 60px 0 40px 0;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 48px 48px;
+      justify-items: center;
+      margin-top: 40px;
+    }
+    .service-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 48px 32px 36px 32px;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+      transition: transform 0.3s, box-shadow 0.3s;
+      cursor: pointer;
+      min-width: 260px;
+      max-width: 400px;
+      width: 100%;
+      border: none;
+      margin: 0 auto;
+      /* Thêm khoảng cách giữa các box */
+    }
+    .service-card:not(:last-child) {
+      /* Đảm bảo khoảng cách dọc giữa các box */
+      margin-bottom: 0;
+    }
+    .service-icon {
+      font-size: 3em;
+      margin-bottom: 18px;
+      display: block;
+    }
+    .service-title {
+      font-size: 1.5em;
+      color: #222;
+      margin-bottom: 12px;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+    .service-description {
+      color: #555;
+      font-size: 1.1em;
+      line-height: 1.5;
+      margin: 0 auto;
+      max-width: 90%;
+    }
+    @media (max-width: 900px) {
+      .main-title { font-size: 2em; }
+      .services-grid { grid-template-columns: 1fr 1fr; gap: 32px 24px; }
+      .service-card { min-width: 0; max-width: 100%; padding: 36px 12px 28px 12px; }
+    }
+    @media (max-width: 600px) {
+      .main-title { font-size: 1.3em; }
+      .services-grid { grid-template-columns: 1fr; gap: 18px; }
+      .service-card { padding: 28px 6px 18px 6px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Dịch Vụ Thẻ Khác</h1>
+    <p>Chọn loại dịch vụ bạn muốn sử dụng bên dưới.</p>
+  </div>
+  <div class="main-bg">
+    <div class="container">
+      <h2 class="main-title">Các Dịch Vụ Thẻ</h2>
+      <div class="services-grid">
+        
+        <div class="service-card" onclick="window.location.href='/tenants/utility-card/elevator-register'">
+          <div class="service-icon">🛗</div>
+          <div class="service-title">Đăng Ký Thẻ Thang Máy</div>
+          <div class="service-description">Đăng ký thẻ sử dụng thang máy cho cư dân hoặc khách.</div>
+        </div>
+        <div class="service-card" onclick="window.location.href='/tenants/utility-card/elevator-cancel'">
+          <div class="service-icon">❌🛗</div>
+          <div class="service-title">Hủy Thẻ Thang Máy</div>
+          <div class="service-description">Hủy bỏ thẻ thang máy khi không còn nhu cầu sử dụng.</div>
+        </div>
+        <div class="service-card" onclick="window.location.href='/tenants/utility-card/pool-register'">
+          <div class="service-icon">🏊‍♂️</div>
+          <div class="service-title">Đăng Ký Vòng Bơi</div>
+          <div class="service-description">Đăng ký vòng bơi cho cư dân hoặc thành viên gia đình.</div>
+        </div>
+        
+        <!-- Có thể thêm các dịch vụ khác ở đây để đủ 9 ô nếu cần -->
+      </div>
+    </div>
+  </div>
+</body>
+</html>
