@@ -1381,156 +1381,21 @@ router.get('/tenant/api/registrations', async (req, res) => {
     const residentRegs = await client.db('resident_info').collection('resident_info_registers').find({ tenant_id: tenantId }).toArray();
     // Gộp và chuẩn hóa dữ liệu
     const all = [
-      ...carRegs.map(r => ({
-        service_name: 'Thẻ Xe',
-        registration_type: 'Đăng ký',
-        user_name: r.personal_info?.full_name || '',
-        user_email: r.personal_info?.email || '',
-        apartment: r.personal_info?.apartment || '',
-        created_at: r.created_at,
-        status: r.status || '',
-        file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/car-registrations/${r.cccd_files[0]}` : ''
-      })),
-      ...carRemake.map(r => ({
-        service_name: 'Thẻ Xe',
-        registration_type: 'Làm lại thẻ',
-        user_name: r.personal_info?.full_name || '',
-        user_email: r.personal_info?.email || '',
-        apartment: r.personal_info?.apartment || '',
-        created_at: r.created_at,
-        status: r.status || '',
-        file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/car-registrations/${r.cccd_files[0]}` : ''
-      })),
-      ...carCancel.map(r => ({
-        service_name: 'Thẻ Xe',
-        registration_type: 'Hủy thẻ',
-        user_name: r.personal_info?.full_name || '',
-        user_email: r.personal_info?.email || '',
-        apartment: r.personal_info?.apartment || '',
-        created_at: r.created_at,
-        status: r.status || '',
-        file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/car-cancel/${r.cccd_files[0]}` : ''
-      })),
-      ...carUpdate.map(r => ({
-        service_name: 'Thẻ Xe',
-        registration_type: 'Thay đổi thông tin',
-        user_name: r.personal_info?.full_name || '',
-        user_email: r.personal_info?.email || '',
-        apartment: r.personal_info?.apartment || '',
-        created_at: r.created_at,
-        status: r.status || '',
-        file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/car-update/${r.cccd_files[0]}` : ''
-      })),
-      ...utilityCards.filter(r => r.fullName && r.apartment).map(r => ({
-        service_name: 'Thẻ Tiện Ích',
-        registration_type: r.cardType || '',
-        user_name: r.fullName || '',
-        user_email: r.email || '',
-        apartment: r.apartment || '',
-        created_at: r.createdAt,
-        status: r.status || '',
-        file_url: ''
-      })),
-      ...elevatorCards.map(r => ({
-        service_name: 'Thẻ Thang Máy',
-        registration_type: 'Đăng ký',
-        user_name: r.full_name || '',
-        user_email: r.email || '',
-        apartment: r.apartment || '',
-        created_at: r.created_at,
-        status: r.status || '',
-        file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/elevator-cards/${r.cccd_files[0]}` : ''
-      })),
-      ...elevatorCancel.map(r => ({
-        service_name: 'Thẻ Thang Máy',
-        registration_type: 'Hủy thẻ',
-        user_name: r.full_name || '',
-        user_email: r.email || '',
-        apartment: r.apartment || '',
-        created_at: r.created_at,
-        status: r.status || '',
-        file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/elevator-cancel/${r.cccd_files[0]}` : ''
-      })),
-      ...poolRegisters.map(r => ({
-        service_name: 'Vòng Bơi',
-        registration_type: 'Đăng ký',
-        user_name: r.full_name || '',
-        user_email: r.email || '',
-        apartment: r.apartment || '',
-        created_at: r.created_at,
-        status: r.status || '',
-        file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/pool-registers/${r.cccd_files[0]}` : ''
-      })),
-      ...advertisingRegs.map(r => ({
-        service_name: 'Quảng Cáo',
-        registration_type: r.ad_type || '',
-        user_name: r.personal_info?.full_name || '',
-        user_email: r.personal_info?.email || '',
-        apartment: r.personal_info?.apartment || '',
-        created_at: r.created_at,
-        status: r.status || '',
-        file_url: ''
-      })),
-      ...petsRegs.map(r => ({
-        service_name: 'Vật Nuôi',
-        registration_type: 'Cam kết',
-        user_name: r.personal_info?.full_name || '',
-        user_email: r.personal_info?.email || '',
-        apartment: r.personal_info?.apartment || '',
-        created_at: r.created_at,
-        status: r.status || '',
-        file_url: r.pet_info?.pet_image ? `/minio/pets-commitment-register/${r.pet_info.pet_image}` : ''
-      })),
-      ...communityRoomRegs.map(r => ({
-        service_name: 'Phòng SHCĐ',
-        registration_type: 'Đăng ký',
-        user_name: r.personal_info?.full_name || '',
-        user_email: r.personal_info?.email || '',
-        apartment: r.personal_info?.apartment || '',
-        created_at: r.created_at,
-        status: r.status || '',
-        file_url: ''
-      })),
-      ...cameraCheckRegs.map(r => ({
-        service_name: 'Kiểm Tra Camera',
-        registration_type: 'Yêu cầu',
-        user_name: r.personal_info?.full_name || '',
-        user_email: r.personal_info?.email || '',
-        apartment: r.personal_info?.apartment || '',
-        created_at: r.created_at,
-        status: r.status || '',
-        file_url: ''
-      })),
-      ...movingRegs.map(r => ({
-        service_name: 'Vận Chuyển',
-        registration_type: 'Đăng ký',
-        user_name: r.full_name || '',
-        user_email: r.email || '',
-        apartment: r.apartment || '',
-        created_at: r.created_at,
-        status: r.status || '',
-        file_url: ''
-      })),
-      ...constructionRegs.map(r => ({
-        service_name: 'Thi Công Nhẹ',
-        registration_type: r.construction_type || '',
-        user_name: r.full_name || '',
-        user_email: r.email || '',
-        apartment: r.apartment || '',
-        created_at: r.created_at,
-        status: r.status || '',
-        file_url: ''
-      })),
-      ...residentRegs.map(r => ({
-        service_name: 'Thông Tin Cư Dân',
-        registration_type: 'Cập nhật',
-        user_name: r.owner?.ownerName || '',
-        user_email: r.owner?.email || '',
-        apartment: r.owner?.apartment || '',
-        created_at: r.created_at,
-        status: r.status || '',
-        file_url: ''
-      }))
+      ...carRegs.map(r => ({ ...r, service_name: 'Thẻ Xe', registration_type: 'Đăng ký', file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/car-registrations/${r.cccd_files[0]}` : '' })),
+      ...carRemake.map(r => ({ ...r, service_name: 'Thẻ Xe', registration_type: 'Làm lại thẻ', file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/car-registrations/${r.cccd_files[0]}` : '' })),
+      ...carCancel.map(r => ({ ...r, service_name: 'Thẻ Xe', registration_type: 'Hủy thẻ', file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/car-cancel/${r.cccd_files[0]}` : '' })),
+      ...carUpdate.map(r => ({ ...r, service_name: 'Thẻ Xe', registration_type: 'Thay đổi thông tin', file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/car-update/${r.cccd_files[0]}` : '' })),
+      ...utilityCards.filter(r => r.fullName && r.apartment).map(r => ({ ...r, service_name: 'Thẻ Tiện Ích', registration_type: r.cardType || '', file_url: '' })),
+      ...elevatorCards.map(r => ({ ...r, service_name: 'Thẻ Thang Máy', registration_type: 'Đăng ký', file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/elevator-cards/${r.cccd_files[0]}` : '' })),
+      ...elevatorCancel.map(r => ({ ...r, service_name: 'Thẻ Thang Máy', registration_type: 'Hủy thẻ', file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/elevator-cancel/${r.cccd_files[0]}` : '' })),
+      ...poolRegisters.map(r => ({ ...r, service_name: 'Vòng Bơi', registration_type: 'Đăng ký', file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/pool-registers/${r.cccd_files[0]}` : '' })),
+      ...advertisingRegs.map(r => ({ ...r, service_name: 'Quảng Cáo', registration_type: r.ad_type || '', file_url: '' })),
+      ...petsRegs.map(r => ({ ...r, service_name: 'Vật Nuôi', registration_type: 'Cam kết', file_url: r.pet_info?.pet_image ? `/minio/pets-commitment-register/${r.pet_info.pet_image}` : '' })),
+      ...communityRoomRegs.map(r => ({ ...r, service_name: 'Phòng SHCĐ', registration_type: 'Đăng ký', file_url: '' })),
+      ...cameraCheckRegs.map(r => ({ ...r, service_name: 'Kiểm Tra Camera', registration_type: 'Yêu cầu', file_url: '' })),
+      ...movingRegs.map(r => ({ ...r, service_name: 'Vận Chuyển', registration_type: 'Đăng ký', file_url: '' })),
+      ...constructionRegs.map(r => ({ ...r, service_name: 'Thi Công Nhẹ', registration_type: r.construction_type || '', file_url: '' })),
+      ...residentRegs.map(r => ({ ...r, service_name: 'Thông Tin Cư Dân', registration_type: 'Cập nhật', file_url: '' }))
     ];
     res.json(all.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
   } catch (err) {

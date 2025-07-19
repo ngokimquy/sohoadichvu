@@ -66,12 +66,20 @@
         </div>
         <table class="reg-table" id="regTable">
           <thead>
-            <tr><th>Dịch vụ</th><th>Người đăng ký</th><th>Email</th><th>Căn hộ</th><th>Thời gian</th><th>Trạng thái</th><th>File</th></tr>
+            <tr><th>Dịch vụ</th><th>Người đăng ký</th><th>Số điện thoại</th><th>Căn hộ</th><th>Thời gian</th><th>Trạng thái</th><th>File</th><th>Chi tiết</th></tr>
           </thead>
           <tbody id="regTableBody"></tbody>
         </table>
       </div>
       <div class="main-footer">&copy; 2025 Tenant Dashboard</div>
+    </div>
+  </div>
+  <!-- Popup chi tiết -->
+  <div id="detailModal" style="display:none;position:fixed;z-index:9999;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);align-items:center;justify-content:center;">
+    <div style="background:#fff;max-width:520px;width:95vw;padding:32px 24px 18px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(124,92,246,0.18);position:relative;">
+      <button onclick="closeDetailModal()" style="position:absolute;top:10px;right:16px;font-size:1.5em;background:none;border:none;cursor:pointer;">&times;</button>
+      <h2 style="margin-top:0;font-size:1.3em;color:#7C3AED;">Chi tiết đăng ký dịch vụ</h2>
+      <div id="detailContent" style="margin-top:18px;font-size:1.08em;color:#222;"></div>
     </div>
   </div>
   <script>
@@ -92,17 +100,44 @@
     function renderRegTable(regs) {
       const body = document.getElementById('regTableBody');
       if (!body) return;
-      body.innerHTML = regs.map(r => `
+      body.innerHTML = regs.map((r, idx) => `
         <tr>
           <td>${r.service_name||''}</td>
           <td>${r.user_name||''}</td>
-          <td>${r.user_email||''}</td>
+          <td>${r.user_phone||''}</td>
           <td>${r.apartment||''}</td>
           <td>${r.created_at ? new Date(r.created_at).toLocaleString() : ''}</td>
           <td>${r.status||''}</td>
           <td>${r.file_url ? `<a href="${r.file_url}" target="_blank">Tải file</a>` : ''}</td>
+          <td style="text-align:center;font-size:1.3em;">
+            <span title="Xem chi tiết" style="cursor:pointer;" onclick="showDetailModal(${idx})">🔍</span>
+          </td>
         </tr>
       `).join('');
+    }
+    function showDetailModal(idx) {
+      const r = _regs[idx];
+      let html = '';
+      function renderObj(obj, prefix = '') {
+        for (const key in obj) {
+          if (obj[key] === null || obj[key] === undefined) continue;
+          const val = obj[key];
+          if (typeof val === 'object' && !Array.isArray(val)) {
+            html += `<div style='margin-bottom:4px;'><b>${prefix + key}:</b></div>`;
+            renderObj(val, prefix + key + '.');
+          } else if (Array.isArray(val)) {
+            html += `<div style='margin-bottom:4px;'><b>${prefix + key}:</b> <span>${val.map(v => typeof v === 'object' ? JSON.stringify(v) : v).join('<br>')}</span></div>`;
+          } else {
+            html += `<div style='margin-bottom:8px;'><b>${prefix + key}:</b> <span>${val}</span></div>`;
+          }
+        }
+      }
+      renderObj(r);
+      document.getElementById('detailContent').innerHTML = html || '<i>Không có thông tin chi tiết</i>';
+      document.getElementById('detailModal').style.display = 'flex';
+    }
+    function closeDetailModal() {
+      document.getElementById('detailModal').style.display = 'none';
     }
     function filterRegTable() {
       const val = document.getElementById('regSearch')?.value.toLowerCase() || '';
