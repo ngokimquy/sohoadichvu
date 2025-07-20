@@ -100,20 +100,26 @@
     function renderRegTable(regs) {
       const body = document.getElementById('regTableBody');
       if (!body) return;
-      body.innerHTML = regs.map((r, idx) => `
-        <tr>
-          <td>${r.service_name||''}</td>
-          <td>${r.user_name||''}</td>
-          <td>${r.user_phone||''}</td>
-          <td>${r.apartment||''}</td>
-          <td>${r.created_at ? new Date(r.created_at).toLocaleString() : ''}</td>
-          <td>${r.status||''}</td>
-          <td>${r.file_url ? `<a href="${r.file_url}" target="_blank">Tải file</a>` : ''}</td>
-          <td style="text-align:center;font-size:1.3em;">
-            <span title="Xem chi tiết" style="cursor:pointer;" onclick="showDetailModal(${idx})">🔍</span>
-          </td>
-        </tr>
-      `).join('');
+      body.innerHTML = regs.map((r, idx) => {
+        // Lấy tên người đăng ký
+        let name = r.user_name || r.fullName || r.owner?.ownerName || r.personal_info?.full_name || r.full_name || r.owner_name || r.ten || r.name || '';
+        // Lấy số điện thoại
+        let phone = r.user_phone || r.phone || r.owner?.phone || r.personal_info?.phone || r.sdt || r.mobile || '';
+        return `
+          <tr>
+            <td>${r.service_name||''}</td>
+            <td>${name}</td>
+            <td>${phone}</td>
+            <td>${r.apartment||r.owner?.apartment||r.personal_info?.apartment||''}</td>
+            <td>${r.created_at ? new Date(r.created_at).toLocaleString() : ''}</td>
+            <td>${r.status||''}</td>
+            <td>${r.file_url ? `<a href="${r.file_url}" target="_blank">Tải file</a>` : ''}</td>
+            <td style="text-align:center;font-size:1.3em;">
+              <span title="Xem chi tiết" style="cursor:pointer;" onclick="showDetailModal(${idx})">🔍</span>
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
     function showDetailModal(idx) {
       const r = _regs[idx];
