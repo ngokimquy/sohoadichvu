@@ -66,7 +66,7 @@
         </div>
         <table class="reg-table" id="regTable">
           <thead>
-            <tr><th>Dịch vụ</th><th>Người đăng ký</th><th>Số điện thoại</th><th>Căn hộ</th><th>Thời gian</th><th>Trạng thái</th><th>File</th><th>Chi tiết</th></tr>
+            <tr><th>Dịch vụ</th><th>Người đăng ký</th><th>Số điện thoại</th><th>Căn hộ</th><th>Thời gian</th><th>Trạng thái</th><th>Chi tiết</th></tr>
           </thead>
           <tbody id="regTableBody"></tbody>
         </table>
@@ -113,7 +113,6 @@
             <td>${r.apartment||r.owner?.apartment||r.personal_info?.apartment||''}</td>
             <td>${r.created_at ? new Date(r.created_at).toLocaleString() : ''}</td>
             <td>${r.status||''}</td>
-            <td>${r.file_url ? `<a href="${r.file_url}" target="_blank">Tải file</a>` : ''}</td>
             <td style="text-align:center;font-size:1.3em;">
               <span title="Xem chi tiết" style="cursor:pointer;" onclick="showDetailModal(${idx})">🔍</span>
             </td>
