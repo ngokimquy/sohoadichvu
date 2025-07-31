@@ -388,7 +388,7 @@
             </div>
           </div>
           <div class="form-group">
-            <label>Vui lòng tải Cavet xe mặt trước lên (có thể chọn nhiều file)</label>
+            <label>Vui lòng tải Cavet xe mặt có biển số lên (có thể chọn nhiều file)</label>
             <div class="file-upload" onclick="document.getElementById('cavetFiles').click()">
               <input type="file" id="cavetFiles" name="cavetFiles" accept="image/*,application/pdf" multiple onchange="previewMultiFiles(this, 'cavetFilesPreview')">
               <div class="file-upload-icon">📄</div>
@@ -592,36 +592,51 @@
     };
     
     // Form submission
+    let isSubmitting = false; // Biến ngăn chặn double submission
     document.getElementById('carRegistrationForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      const formData = new FormData(this);
-      // Add signature
-      const signatureData = canvas.toDataURL();
-      formData.append('signature', signatureData);
-      // Kiểm tra file upload
+      
+      // Ngăn chặn double submission
+      if (isSubmitting) {
+        return;
+      }
+      
+      const submitBtn = document.querySelector('.btn-success');
+      isSubmitting = true;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Đang gửi...';
+      
+      // Kiểm tra file upload trước
       const cccdFiles = document.getElementById('cccdFiles').files;
       const cavetFiles = document.getElementById('cavetFiles').files;
       if (!cccdFiles || cccdFiles.length === 0) {
         alert('Vui lòng tải lên ít nhất 1 file CCCD mặt trước!');
+        isSubmitting = false;
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Gửi Đăng Ký';
         return;
       }
       if (!cavetFiles || cavetFiles.length === 0) {
         alert('Vui lòng tải lên ít nhất 1 file Cavet xe mặt trước!');
+        isSubmitting = false;
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Gửi Đăng Ký';
         return;
       }
-      // Thêm file CCCD vào formData
-      for (let i = 0; i < cccdFiles.length; i++) {
-        formData.append('cccdFiles', cccdFiles[i]);
-      }
-      // Thêm file Cavet vào formData
-      for (let i = 0; i < cavetFiles.length; i++) {
-        formData.append('cavetFiles', cavetFiles[i]);
-      }
+      
       // Kiểm tra chữ ký thực sự có vẽ
       if (!isCanvasSigned(canvas)) {
         alert('Vui lòng ký tên xác nhận!');
+        isSubmitting = false;
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Gửi Đăng Ký';
         return;
       }
+      
+      // Tạo FormData và chỉ thêm signature (các file đã được tự động thêm bởi form)
+      const formData = new FormData(this);
+      const signatureData = canvas.toDataURL();
+      formData.append('signature', signatureData);
       try {
         const response = await fetch('/api/car-registration', {
           method: 'POST',
@@ -647,10 +662,16 @@
           showSuccessPopup({ fullName, email, phone, apartment, role, vehicles, chungcuName: result.chungcuName, createdAt: result.createdAt });
         } else {
           alert('Có lỗi xảy ra. Vui lòng thử lại.');
+          isSubmitting = false;
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Gửi Đăng Ký';
         }
       } catch (error) {
         console.error('Error:', error);
         alert('Có lỗi xảy ra. Vui lòng thử lại.');
+        isSubmitting = false;
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Gửi Đăng Ký';
       }
     });
 

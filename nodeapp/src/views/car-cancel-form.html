@@ -205,20 +205,24 @@
     // Form submission
     document.getElementById('carRegistrationForm').addEventListener('submit', async function(e) {
       e.preventDefault();
+      
+      // Kiểm tra file upload trước
+      const cccdFiles = document.getElementById('cccdFiles').files;
+      if (!cccdFiles || cccdFiles.length === 0) { 
+        alert('Vui lòng tải lên ít nhất 1 file CCCD mặt trước!'); 
+        return; 
+      }
+      
+      // Kiểm tra chữ ký thực sự có vẽ
+      if (!isCanvasSigned(canvas)) { 
+        alert('Vui lòng ký tên xác nhận!'); 
+        return; 
+      }
+      
+      // Tạo FormData và chỉ thêm signature (các file đã được tự động thêm bởi form)
       const formData = new FormData(this);
-      // Add signature
       const signatureData = canvas.toDataURL();
       formData.append('signature', signatureData);
-      // Kiểm tra file upload
-      const cccdFiles = document.getElementById('cccdFiles').files;
-      if (!cccdFiles || cccdFiles.length === 0) { alert('Vui lòng tải lên ít nhất 1 file CCCD mặt trước!'); return; }
-      // Thêm file CCCD vào formData
-      for (let i = 0; i < cccdFiles.length; i++) { formData.append('cccdFiles', cccdFiles[i]); }
-      // Thêm file thẻ xe (nếu có)
-      const cavetFiles = document.getElementById('cavetFiles').files;
-      for (let i = 0; i < cavetFiles.length; i++) { formData.append('cavetFiles', cavetFiles[i]); }
-      // Kiểm tra chữ ký thực sự có vẽ
-      if (!isCanvasSigned(canvas)) { alert('Vui lòng ký tên xác nhận!'); return; }
       try {
         const response = await fetch('/api/car-cancel', { method: 'POST', body: formData });
         if (response.ok) {

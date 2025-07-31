@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Car Registration File Upload</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        .file-info { background: #f8f9fa; padding: 10px; margin-top: 10px; border-radius: 4px; }
+        .debug-info { background: #fff3cd; padding: 15px; margin-top: 20px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Car Registration - File Upload Debug</h1>
+        
+        <form id="testForm">
+            <div class="form-group">
+                <label for="fullName">Họ và Tên:</label>
+                <input type="text" id="fullName" name="fullName" value="Nguyễn Test" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">Số ĐT:</label>
+                <input type="tel" id="phone" name="phone" value="0123456789" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="apartment">Số Căn Hộ:</label>
+                <input type="text" id="apartment" name="apartment" value="A101" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="role">Vai Trò:</label>
+                <select id="role" name="role" required>
+                    <option value="chu_ho" selected>Chủ Hộ</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="registrationDate">Ngày đăng ký:</label>
+                <input type="date" id="registrationDate" name="registrationDate" value="2025-07-31" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Loại xe:</label>
+                <select name="vehicleType[]" required>
+                    <option value="car" selected>Xe Ô Tô</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Biển số xe:</label>
+                <input type="text" name="licensePlate[]" value="29A-12345" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Tên chủ xe:</label>
+                <input type="text" name="ownerName[]" value="Nguyễn Test" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="cccdFiles">File CCCD (chọn 1 file để test):</label>
+                <input type="file" id="cccdFiles" name="cccdFiles" accept="image/*,application/pdf" onchange="showFileInfo('cccdFiles', 'cccdInfo')">
+                <div id="cccdInfo" class="file-info" style="display: none;"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="cavetFiles">File Cavet (chọn 1 file để test):</label>
+                <input type="file" id="cavetFiles" name="cavetFiles" accept="image/*,application/pdf" onchange="showFileInfo('cavetFiles', 'cavetInfo')">
+                <div id="cavetInfo" class="file-info" style="display: none;"></div>
+            </div>
+            
+            <button type="submit">Test Submit</button>
+        </form>
+        
+        <div id="debugInfo" class="debug-info" style="display: none;">
+            <h3>Debug Information:</h3>
+            <div id="debugContent"></div>
+        </div>
+    </div>
+
+    <script>
+        function showFileInfo(inputId, infoId) {
+            const input = document.getElementById(inputId);
+            const info = document.getElementById(infoId);
+            
+            if (input.files.length > 0) {
+                const file = input.files[0];
+                info.innerHTML = `
+                    <strong>File Selected:</strong><br>
+                    Name: ${file.name}<br>
+                    Size: ${file.size} bytes<br>
+                    Type: ${file.type}<br>
+                    Last Modified: ${new Date(file.lastModified).toLocaleString()}
+                `;
+                info.style.display = 'block';
+            } else {
+                info.style.display = 'none';
+            }
+        }
+
+        document.getElementById('testForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const debugInfo = document.getElementById('debugInfo');
+            const debugContent = document.getElementById('debugContent');
+            
+            debugContent.innerHTML = 'Sending request...';
+            debugInfo.style.display = 'block';
+            
+            // Create FormData từ form (tự động lấy tất cả fields)
+            const formData = new FormData(this);
+            
+            // Thêm signature giả
+            formData.append('signature', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
+            
+            // Debug: Show what's in FormData
+            let formDataEntries = [];
+            for (let [key, value] of formData.entries()) {
+                if (value instanceof File) {
+                    formDataEntries.push(`${key}: File(${value.name}, ${value.size} bytes)`);
+                } else {
+                    formDataEntries.push(`${key}: ${value}`);
+                }
+            }
+            
+            debugContent.innerHTML = `
+                <strong>FormData entries:</strong><br>
+                ${formDataEntries.join('<br>')}<br><br>
+                <strong>Sending to server...</strong>
+            `;
+            
+            try {
+                const response = await fetch('/api/test-car-upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                debugContent.innerHTML += `<br><br><strong>Response:</strong><br>
+                    Status: ${response.status}<br>
+                    Success: ${result.success}<br>
+                    Message: ${result.message || result.error}<br>
+                    ${JSON.stringify(result, null, 2)}
+                `;
+                
+            } catch (error) {
+                debugContent.innerHTML += `<br><br><strong>Error:</strong><br>${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>

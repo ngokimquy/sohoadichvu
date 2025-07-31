@@ -188,13 +188,24 @@
     // Form submission
     document.getElementById('poolRegisterForm').addEventListener('submit', async function(e) {
       e.preventDefault();
+      
+      // Kiểm tra file upload trước
+      const cccdFiles = document.getElementById('cccdFiles').files;
+      if (!cccdFiles || cccdFiles.length === 0) { 
+        alert('Vui lòng tải lên ít nhất 1 file CCCD mặt trước!'); 
+        return; 
+      }
+      
+      // Kiểm tra chữ ký thực sự có vẽ
+      if (!isCanvasSigned(canvas)) { 
+        alert('Vui lòng ký tên xác nhận!'); 
+        return; 
+      }
+      
+      // Tạo FormData và chỉ thêm signature (các file đã được tự động thêm bởi form)
       const formData = new FormData(this);
       const signatureData = canvas.toDataURL();
       formData.append('signature', signatureData);
-      const cccdFiles = document.getElementById('cccdFiles').files;
-      if (!cccdFiles || cccdFiles.length === 0) { alert('Vui lòng tải lên ít nhất 1 file CCCD mặt trước!'); return; }
-      for (let i = 0; i < cccdFiles.length; i++) { formData.append('cccdFiles', cccdFiles[i]); }
-      if (!isCanvasSigned(canvas)) { alert('Vui lòng ký tên xác nhận!'); return; }
       try {
         const response = await fetch('/api/pool-register', { method: 'POST', body: formData });
         if (response.ok) {

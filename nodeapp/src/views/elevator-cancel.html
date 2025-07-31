@@ -224,24 +224,24 @@
     // Form submission
     document.getElementById('elevatorCancelForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      const formData = new FormData(this);
-      // Add signature
-      const signatureData = canvas.toDataURL();
-      formData.append('signature', signatureData);
-      // Kiểm tra file upload
+      
+      // Kiểm tra file upload trước
       const cccdFiles = document.getElementById('cccdFiles').files;
       if (!cccdFiles || cccdFiles.length === 0) {
         alert('Vui lòng tải lên ít nhất 1 file CCCD mặt trước!');
         return;
       }
-      for (let i = 0; i < cccdFiles.length; i++) {
-        formData.append('cccdFiles', cccdFiles[i]);
-      }
+      
       // Kiểm tra chữ ký thực sự có vẽ
       if (!isCanvasSigned(canvas)) {
         alert('Vui lòng ký tên xác nhận!');
         return;
       }
+      
+      // Tạo FormData và chỉ thêm signature (các file đã được tự động thêm bởi form)
+      const formData = new FormData(this);
+      const signatureData = canvas.toDataURL();
+      formData.append('signature', signatureData);
       try {
         const response = await fetch('/api/elevator-card-cancel', {
           method: 'POST',
