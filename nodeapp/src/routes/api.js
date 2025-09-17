@@ -1,4 +1,8 @@
-﻿const express = require('express');
+﻿
+// API tra cứu thông tin đăng ký dịch vụ đã đăng ký (GET /api/registration-lookup)
+
+
+const express = require('express');
 const router = express.Router();
 const { MongoClient } = require('mongodb');
 const fs = require('fs');
@@ -54,6 +58,8 @@ if (minioEndpoint && minioUser && minioPass) {
 router.get('/', (req, res) => {
   res.redirect('/tenants');
 });
+
+
 
 // Route Ä‘á»ƒ serve file tá»« MinIO - PHáº¢I Äáº¶T TRÆ¯á»šC route /tenants Ä‘á»ƒ trÃ¡nh conflict
 router.get('/minio/:bucket/:filename', async (req, res) => {
@@ -228,6 +234,10 @@ router.get('/minio/:bucket/*', async (req, res) => {
 
 // Route trang Ä‘Äƒng kÃ½ dá»‹ch vá»¥ cho táº¥t cáº£ subdomain
 router.get('/tenants/:service?/:subservice?', async (req, res) => {
+// API tra cứu thông tin đăng ký dịch vụ cho cư dân (theo tenant)
+
+  // Trang tra cứu dịch vụ đã đăng ký
+
   const tenantId = req.tenant_id;
   const service = req.params.service;
   const subservice = req.params.subservice;
@@ -247,18 +257,30 @@ router.get('/tenants/:service?/:subservice?', async (req, res) => {
     }
   }
 
-  if (service === 'resident-info-register') {
-
-      const htmlPath = path.join(__dirname, '..', 'views', 'resident-info-register.html');
+  if (service === 'registration-lookup') {
+    const htmlPath = path.join(__dirname, '..', 'views', 'registration-lookup.html');
     fs.readFile(htmlPath, 'utf8', (err, html) => {
-      if (err) return res.status(500).send('Lá»—i Ä‘á»c giao diá»‡n');
+      if (err) return res.status(500).send('Lỗi đọc feffefgiao diện tra cứu');
+      res.send(html);
+    });
+    return;
+  }
+
+
+
+  if (service === 'resident-info-register') {
+    const htmlPath = path.join(__dirname, '..', 'views', 'resident-info-register.html');
+    fs.readFile(htmlPath, 'utf8', (err, html) => {
+      if (err) return res.status(500).send('Lỗi đọc giao diện');
       res.send(html.replace('{{chungcuName}}', chungcuName ? chungcuName : ''));
     });
     return;
-
-
-
   }
+
+
+
+  
+ 
   
   // Náº¿u service lÃ  car-registration, hiá»ƒn thá»‹ trang dá»‹ch vá»¥ tháº» xe
   if (service === 'car-registration') {
@@ -1584,6 +1606,76 @@ router.post('/api/construction-register', upload.none(), async (req, res) => {
   }
 });
 
+router.get('/api/registration-lookup', async (req, res) => {
+  console.log('Received registration lookup request with query:', req.query);
+  const { phone, apartment } = req.query;
+  if (!phone || !apartment) {
+    return res.json({ success: false, error: 'Thiếu thông tin tra cứu', results: [] });
+  }
+  try {
+    const client = new MongoClient(mongoUri);
+    await client.connect();
+    let results = [];
+
+    // Đăng ký thẻ xe
+    const carRegs = await client.db('car_registrations').collection('registrations').find({
+      'personal_info.phone': phone,
+      'personal_info.apartment': apartment
+    }).toArray();
+    results = results.concat(carRegs.map(r => ({
+      service: 'Đăng ký thẻ xe',
+      created_at: r.created_at ? r.created_at.toLocaleString('vi-VN') : '',
+      status: r.status || '',
+      note: ''
+    })));
+
+    // Đăng ký thẻ thang máy
+    const elevatorRegs = await client.db('utility_card').collection('elevator_cards').find({
+      phone,
+      apartment
+    }).toArray();
+    results = results.concat(elevatorRegs.map(r => ({
+      service: 'Đăng ký thẻ thang máy',
+      created_at: r.created_at ? r.created_at.toLocaleString('vi-VN') : '',
+      status: r.status || '',
+      note: r.note || ''
+    })));
+
+    // Đăng ký vòng bơi
+    const poolRegs = await client.db('utility_card').collection('pool_registers').find({
+      phone,
+      apartment
+    }).toArray();
+    results = results.concat(poolRegs.map(r => ({
+      service: 'Đăng ký vòng bơi',
+      created_at: r.created_at ? r.created_at.toLocaleString('vi-VN') : '',
+      status: r.status || '',
+      note: ''
+    })));
+
+    // Đăng ký thông tin cư dân
+    const residentRegs = await client.db('resident_info').collection('resident_info_registers').find({
+      'owner.phone': phone,
+      'owner.apartment': apartment
+    }).toArray();
+    results = results.concat(residentRegs.map(r => ({
+      service: 'Đăng ký thông tin cư dân',
+      created_at: r.created_at ? r.created_at.toLocaleString('vi-VN') : '',
+      status: r.status || '',
+      note: ''
+    })));
+
+    await client.close();
+    res.json({ success: true, results });
+  } catch (err) {
+    console.error('Error in registration lookup:', err);
+    res.json({ success: false, error: 'Lỗi tra cứu', results: [] });
+  }
+});
+
+
+
+
 // API tá»•ng há»£p danh sÃ¡ch Ä‘Äƒng kÃ½ dá»‹ch vá»¥ cho tenant-dashboard (láº¥y táº¥t cáº£ collection liÃªn quan)
 router.get('/tenant/api/registrations', async (req, res) => {
   const tenantId = req.tenant_id;
@@ -1637,5 +1729,7 @@ router.get('/tenant/api/registrations', async (req, res) => {
     await client.close();
   }
 });
+
+
 
 module.exports = router;
