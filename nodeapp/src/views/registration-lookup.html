@@ -38,6 +38,85 @@
         <div id="resultArea"></div>
     </div>
     <script>
+        function vietHoaTrangThai(status) {
+            switch ((status || '').toLowerCase()) {
+                case 'pending': return 'Đang chờ';
+                case 'completed': return 'Đã hoàn thành';
+                case 'approved': return 'Đã hoàn thành';
+                case 'rejected': return 'Từ chối';
+                case 'canceled': return 'Đã hủy';
+                default: return status || '';
+            }
+        }
+
+        function showDetailModal(idx) {
+            const r = window._lookupResults[idx];
+            let html = '';
+            // Việt hóa tên trường
+            const vietnameseFieldNames = {
+                'service': 'Dịch vụ',
+                'created_at': 'Ngày đăng ký',
+                'status': 'Trạng thái',
+                'note': 'Ghi chú',
+                'apartment': 'Căn hộ',
+                'phone': 'Số điện thoại',
+                'fullName': 'Họ và tên',
+                'email': 'Email',
+                'role': 'Vai trò',
+                'moveDate': 'Ngày vận chuyển',
+                'moveTime': 'Khung giờ vận chuyển',
+                'goodsDesc': 'Mô tả hàng hóa',
+                'movingType': 'Loại vận chuyển',
+                'constructionType': 'Loại thi công',
+                'description': 'Mô tả',
+                'ad_type': 'Loại quảng cáo',
+                'ad_content': 'Nội dung quảng cáo',
+                'camera_location': 'Vị trí camera',
+                'pet_type': 'Loại vật nuôi',
+                'pet_name': 'Tên vật nuôi',
+                'community_room': 'Phòng cộng đồng',
+                'pool_name': 'Tên hồ bơi',
+                'ownerName': 'Tên chủ xe',
+                'licensePlate': 'Biển số xe',
+                'vehicleType': 'Loại xe',
+                'registrationDate': 'Ngày đăng ký',
+                'resident_name': 'Tên cư dân',
+                'resident_phone': 'SĐT cư dân',
+                'resident_apartment': 'Căn hộ cư dân',
+                // ...bổ sung nếu cần
+            };
+            for (const key in r) {
+                if (typeof r[key] === 'string' && r[key].match(/^https?:\/\//)) continue; // Bỏ qua link hình ảnh
+                if (typeof r[key] === 'object' && r[key] !== null) continue; // Bỏ qua object/phức tạp
+                if (key === 'status') {
+                    html += `<div style='margin-bottom:10px;'><b style="color:#333;">${vietnameseFieldNames[key]||key}:</b> <span>${vietHoaTrangThai(r[key])}</span></div>`;
+                } else if (vietnameseFieldNames[key]) {
+                    html += `<div style='margin-bottom:10px;'><b style="color:#333;">${vietnameseFieldNames[key]}:</b> <span>${r[key]}</span></div>`;
+                } else if (typeof r[key] === 'string' && r[key]) {
+                    html += `<div style='margin-bottom:10px;'><b style="color:#333;">${key}:</b> <span>${r[key]}</span></div>`;
+                }
+            }
+            if (!html) html = '<i>Không có thông tin chi tiết</i>';
+            let modal = document.getElementById('detailModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'detailModal';
+                modal.style.cssText = 'display:flex;position:fixed;z-index:9999;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.18);align-items:center;justify-content:center;';
+                modal.innerHTML = `<div style="background:#fff;max-width:420px;width:100%;padding:32px 24px 18px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(124,92,246,0.18);position:relative;overflow-y:auto;max-height:90vh;">
+                    <button onclick="closeDetailModal()" style="position:absolute;top:10px;right:16px;font-size:1.5em;background:none;border:none;cursor:pointer;color:#666;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;">&times;</button>
+                    <h2 style="margin-top:0;font-size:1.15em;color:#0984e3;border-bottom:2px solid #0984e3;padding-bottom:8px;">Chi tiết đăng ký</h2>
+                    <div id="detailContent" style="margin-top:18px;font-size:1.08em;color:#222;line-height:1.5;"></div>
+                </div>`;
+                document.body.appendChild(modal);
+            }
+            document.getElementById('detailContent').innerHTML = html;
+            modal.style.display = 'flex';
+        }
+        function closeDetailModal() {
+            const modal = document.getElementById('detailModal');
+            if (modal) modal.style.display = 'none';
+        }
+
         document.getElementById('lookupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const phone = document.getElementById('phone').value.trim();
@@ -48,22 +127,22 @@
                 const res = await fetch(`/api/registration-lookup?phone=${encodeURIComponent(phone)}&apartment=${encodeURIComponent(apartment)}`);
                 const data = await res.json();
                 if (data.success && data.results.length > 0) {
-                    function vietHoaTrangThai(status) {
-                        switch ((status || '').toLowerCase()) {
-                            case 'pending': return 'Đang chờ';
-                            case 'completed': return 'Đã hoàn thành';
-                            case 'approved': return 'Đã hoàn thành';
-                            case 'rejected': return 'Từ chối';
-                            case 'canceled': return 'Đã hủy';
-                            default: return status || '';
-                        }
-                    }
-                    let html = '<table class="result-table"><thead><tr><th>Dịch vụ</th><th>Ngày đăng ký</th><th>Trạng thái</th><th>Ghi chú</th></tr></thead><tbody>';
-                    data.results.forEach(item => {
-                        html += `<tr><td>${item.service}</td><td>${item.created_at}</td><td>${vietHoaTrangThai(item.status)}</td><td>${item.note || ''}</td></tr>`;
+                    let html = '<table class="result-table"><thead><tr><th>STT</th><th>Dịch vụ</th><th>Ngày đăng ký</th><th>Trạng thái</th><th>Ghi chú</th><th>Chi tiết</th></tr></thead><tbody>';
+                    data.results.forEach((item, idx) => {
+                        html += `<tr>
+                            <td>${idx + 1}</td>
+                            <td>${item.service}</td>
+                            <td>${item.created_at}</td>
+                            <td>${vietHoaTrangThai(item.status)}</td>
+                            <td>${item.note || ''}</td>
+                            <td style="text-align:center;font-size:1.3em;">
+                                <span title="Xem chi tiết" style="cursor:pointer;" onclick="showDetailModal(${idx})">🔍</span>
+                            </td>
+                        </tr>`;
                     });
                     html += '</tbody></table>';
                     resultArea.innerHTML = html;
+                    window._lookupResults = data.results;
                 } else {
                     resultArea.innerHTML = '<div class="no-result">Không tìm thấy thông tin đăng ký phù hợp!</div>';
                 }

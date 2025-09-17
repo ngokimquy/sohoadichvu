@@ -1526,11 +1526,11 @@ router.post('/api/moving-service-register', express.json(), async (req, res) => 
     return res.status(400).json({ success: false, error: 'KhÃ´ng xÃ¡c Ä‘á»‹nh Ä‘Æ°á»£c tenant' });
   }
   try {
-    const { fullName, apartment, phone, email, role, moveDate, moveTime, goodsDesc, note } = req.body;
-    if (!fullName || !apartment || !phone || !role || !moveDate || !moveTime || !goodsDesc) {
-      return res.status(400).json({ success: false, error: 'Vui lÃ²ng nháº­p Ä‘áº§y Ä‘á»§ thÃ´ng tin báº¯t buá»™c.' });
+    const { fullName, apartment, phone, email, role, movingType, moveDate, moveTime, goodsDesc, note } = req.body;
+    if (!fullName || !apartment || !phone || !role || !movingType || !moveDate || !moveTime || !goodsDesc) {
+      return res.status(400).json({ success: false, error: 'Vui lòng nhập đầy đủ thông tin bắt buộc.' });
     }
-    // LÆ°u vÃ o MongoDB (DB riÃªng: moving_service)
+    // Lưu vào MongoDB (DB riêng: moving_service)
     const client = new MongoClient(mongoUri);
     await client.connect();
     let chungcuName = '';
@@ -1545,6 +1545,7 @@ router.post('/api/moving-service-register', express.json(), async (req, res) => 
       phone,
       email,
       role,
+      moving_type: movingType,
       move_date: moveDate,
       move_time: moveTime,
       goods_desc: goodsDesc,
@@ -1555,7 +1556,7 @@ router.post('/api/moving-service-register', express.json(), async (req, res) => 
     };
     await client.db('moving_service').collection('moving_service_registers').insertOne(registrationData);
     await client.close();
-    res.json({ success: true, message: 'ÄÄƒng kÃ½ váº­n chuyá»ƒn thÃ nh cÃ´ng!', chungcuName, createdAt: registrationData.created_at });
+    res.json({ success: true, message: 'Đăng ký vận chuyển thành công!', chungcuName, createdAt: registrationData.created_at });
   } catch (error) {
     console.error('Error processing moving service register:', error);
     res.status(500).json({ success: false, error: 'CÃ³ lá»—i xáº£y ra khi xá»­ lÃ½ Ä‘Äƒng kÃ½ váº­n chuyá»ƒn' });
@@ -1617,7 +1618,7 @@ router.get('/api/registration-lookup', async (req, res) => {
     await client.connect();
     let results = [];
 
-    // Đăng ký thẻ xe
+    // Car registrations
     const carRegs = await client.db('car_registrations').collection('registrations').find({
       'personal_info.phone': phone,
       'personal_info.apartment': apartment
@@ -1626,10 +1627,78 @@ router.get('/api/registration-lookup', async (req, res) => {
       service: 'Đăng ký thẻ xe',
       created_at: r.created_at ? r.created_at.toLocaleString('vi-VN') : '',
       status: r.status || '',
-      note: ''
+      note: r.note || '',
+      apartment: r.personal_info?.apartment || '',
+      phone: r.personal_info?.phone || '',
+      fullName: r.personal_info?.full_name || '',
+      email: r.personal_info?.email || '',
+      role: r.personal_info?.role || '',
+      licensePlate: r.vehicles?.[0]?.license_plate || '',
+      vehicleType: r.vehicles?.[0]?.type || '',
+      registrationDate: r.created_at ? r.created_at.toLocaleString('vi-VN') : ''
     })));
 
-    // Đăng ký thẻ thang máy
+    // Car remake
+    const carRemake = await client.db('car_registrations').collection('remake_requests').find({
+      'personal_info.phone': phone,
+      'personal_info.apartment': apartment
+    }).toArray();
+    results = results.concat(carRemake.map(r => ({
+      service: 'Làm lại thẻ xe',
+      created_at: r.created_at ? r.created_at.toLocaleString('vi-VN') : '',
+      status: r.status || '',
+      note: r.note || '',
+      apartment: r.personal_info?.apartment || '',
+      phone: r.personal_info?.phone || '',
+      fullName: r.personal_info?.full_name || '',
+      email: r.personal_info?.email || '',
+      role: r.personal_info?.role || '',
+      licensePlate: r.vehicles?.[0]?.license_plate || '',
+      vehicleType: r.vehicles?.[0]?.type || '',
+      registrationDate: r.created_at ? r.created_at.toLocaleString('vi-VN') : ''
+    })));
+
+    // Car cancel
+    const carCancel = await client.db('car_registrations').collection('cancel_requests').find({
+      'personal_info.phone': phone,
+      'personal_info.apartment': apartment
+    }).toArray();
+    results = results.concat(carCancel.map(r => ({
+      service: 'Hủy thẻ xe',
+      created_at: r.created_at ? r.created_at.toLocaleString('vi-VN') : '',
+      status: r.status || '',
+      note: r.note || '',
+      apartment: r.personal_info?.apartment || '',
+      phone: r.personal_info?.phone || '',
+      fullName: r.personal_info?.full_name || '',
+      email: r.personal_info?.email || '',
+      role: r.personal_info?.role || '',
+      licensePlate: r.vehicles?.[0]?.license_plate || '',
+      vehicleType: r.vehicles?.[0]?.type || '',
+      registrationDate: r.created_at ? r.created_at.toLocaleString('vi-VN') : ''
+    })));
+
+    // Car update
+    const carUpdate = await client.db('car_registrations').collection('update_requests').find({
+      'personal_info.phone': phone,
+      'personal_info.apartment': apartment
+    }).toArray();
+    results = results.concat(carUpdate.map(r => ({
+      service: 'Thay đổi thông tin xe',
+      created_at: r.created_at ? r.created_at.toLocaleString('vi-VN') : '',
+      status: r.status || '',
+      note: r.note || '',
+      apartment: r.personal_info?.apartment || '',
+      phone: r.personal_info?.phone || '',
+      fullName: r.personal_info?.full_name || '',
+      email: r.personal_info?.email || '',
+      role: r.personal_info?.role || '',
+      licensePlate: r.vehicles?.[0]?.license_plate || '',
+      vehicleType: r.vehicles?.[0]?.type || '',
+      registrationDate: r.created_at ? r.created_at.toLocaleString('vi-VN') : ''
+    })));
+
+    // Elevator card
     const elevatorRegs = await client.db('utility_card').collection('elevator_cards').find({
       phone,
       apartment
@@ -1638,10 +1707,32 @@ router.get('/api/registration-lookup', async (req, res) => {
       service: 'Đăng ký thẻ thang máy',
       created_at: r.created_at ? r.created_at.toLocaleString('vi-VN') : '',
       status: r.status || '',
-      note: r.note || ''
+      note: r.note || '',
+      apartment: r.apartment || '',
+      phone: r.phone || '',
+      fullName: r.fullName || '',
+      email: r.email || '',
+      role: r.role || ''
     })));
 
-    // Đăng ký vòng bơi
+    // Elevator cancel
+    const elevatorCancel = await client.db('utility_card').collection('elevator_cancel_requests').find({
+      phone,
+      apartment
+    }).toArray();
+    results = results.concat(elevatorCancel.map(r => ({
+      service: 'Hủy thẻ thang máy',
+      created_at: r.created_at ? r.created_at.toLocaleString('vi-VN') : '',
+      status: r.status || '',
+      note: r.note || '',
+      apartment: r.apartment || '',
+      phone: r.phone || '',
+      fullName: r.fullName || '',
+      email: r.email || '',
+      role: r.role || ''
+    })));
+
+    // Pool register
     const poolRegs = await client.db('utility_card').collection('pool_registers').find({
       phone,
       apartment
@@ -1650,10 +1741,155 @@ router.get('/api/registration-lookup', async (req, res) => {
       service: 'Đăng ký vòng bơi',
       created_at: r.created_at ? r.created_at.toLocaleString('vi-VN') : '',
       status: r.status || '',
-      note: ''
+      note: r.note || '',
+      apartment: r.apartment || '',
+      phone: r.phone || '',
+      fullName: r.fullName || '',
+      email: r.email || '',
+      role: r.role || ''
     })));
 
-    // Đăng ký thông tin cư dân
+    // Utility card (other types)
+    const utilityCards = await client.db('utility_card').collection('utility_cards').find({
+      phone,
+      apartment
+    }).toArray();
+    results = results.concat(utilityCards.map(r => ({
+      service: 'Đăng ký thẻ tiện ích',
+      created_at: r.createdAt ? r.createdAt.toLocaleString('vi-VN') : '',
+      status: r.status || '',
+      note: r.note || '',
+      apartment: r.apartment || '',
+      phone: r.phone || '',
+      fullName: r.fullName || '',
+      email: r.email || '',
+      role: r.role || '',
+      cardType: r.cardType || ''
+    })));
+
+    // Advertising register
+    const advertisingRegs = await client.db('utility_services').collection('advertising_registers').find({
+      'personal_info.phone': phone,
+      'personal_info.apartment': apartment
+    }).toArray();
+    results = results.concat(advertisingRegs.map(r => ({
+      service: 'Đăng ký quảng cáo',
+      created_at: r.created_at ? r.created_at.toLocaleString('vi-VN') : '',
+      status: r.status || '',
+      note: r.note || '',
+      apartment: r.personal_info?.apartment || '',
+      phone: r.personal_info?.phone || '',
+      fullName: r.personal_info?.full_name || '',
+      email: r.personal_info?.email || '',
+      role: r.personal_info?.role || '',
+      adType: r.ad_type || '',
+      content: r.content || '',
+      location: r.location || ''
+    })));
+
+    // Pets commitment register
+    const petsRegs = await client.db('utility_services').collection('pets_commitment_register').find({
+      'personal_info.phone': phone,
+      'personal_info.apartment': apartment
+    }).toArray();
+    results = results.concat(petsRegs.map(r => ({
+      service: 'Cam kết vật nuôi',
+      created_at: r.created_at ? r.created_at.toLocaleString('vi-VN') : '',
+      status: r.status || '',
+      note: r.note || '',
+      apartment: r.personal_info?.apartment || '',
+      phone: r.personal_info?.phone || '',
+      fullName: r.personal_info?.full_name || '',
+      email: r.personal_info?.email || '',
+      role: r.personal_info?.role || '',
+      petType: r.pet_info?.pet_type || '',
+      petQuantity: r.pet_info?.pet_quantity || '',
+      petReason: r.pet_info?.pet_reason || ''
+    })));
+
+    // Community room register
+    const communityRoomRegs = await client.db('utility_services').collection('community_room_registers').find({
+      'personal_info.phone': phone,
+      'personal_info.apartment': apartment
+    }).toArray();
+    results = results.concat(communityRoomRegs.map(r => ({
+      service: 'Đăng ký phòng SHCĐ',
+      created_at: r.created_at ? r.created_at.toLocaleString('vi-VN') : '',
+      status: r.status || '',
+      note: r.note || '',
+      apartment: r.personal_info?.apartment || '',
+      phone: r.personal_info?.phone || '',
+      fullName: r.personal_info?.full_name || '',
+      email: r.personal_info?.email || '',
+      role: r.personal_info?.role || '',
+      purpose: r.purpose || '',
+      date: r.date || '',
+      time: r.time || '',
+      attendees: r.attendees || ''
+    })));
+
+    // Camera check request
+    const cameraCheckRegs = await client.db('utility_services').collection('camera_check_requests').find({
+      'personal_info.phone': phone,
+      'personal_info.apartment': apartment
+    }).toArray();
+    results = results.concat(cameraCheckRegs.map(r => ({
+      service: 'Yêu cầu kiểm tra camera',
+      created_at: r.created_at ? r.created_at.toLocaleString('vi-VN') : '',
+      status: r.status || '',
+      note: r.note || '',
+      apartment: r.personal_info?.apartment || '',
+      phone: r.personal_info?.phone || '',
+      fullName: r.personal_info?.full_name || '',
+      email: r.personal_info?.email || '',
+      role: r.personal_info?.role || '',
+      cameraLocation: r.camera_location || '',
+      requestReason: r.request_reason || ''
+    })));
+
+    // Moving service register
+    const movingRegs = await client.db('moving_service').collection('moving_service_registers').find({
+      phone,
+      apartment
+    }).toArray();
+    results = results.concat(movingRegs.map(r => ({
+      service: 'Đăng ký vận chuyển',
+      created_at: r.created_at ? r.created_at.toLocaleString('vi-VN') : '',
+      status: r.status || '',
+      note: r.note || '',
+      apartment: r.apartment || '',
+      phone: r.phone || '',
+      fullName: r.full_name || '',
+      email: r.email || '',
+      role: r.role || '',
+      movingType: r.moving_type || '',
+      moveDate: r.move_date || '',
+      moveTime: r.move_time || '',
+      goodsDesc: r.goods_desc || ''
+    })));
+
+    // Construction register
+    const constructionRegs = await client.db('construction_service').collection('construction_registers').find({
+      phone,
+      apartment
+    }).toArray();
+    results = results.concat(constructionRegs.map(r => ({
+      service: 'Đăng ký thi công',
+      created_at: r.created_at ? r.created_at.toLocaleString('vi-VN') : '',
+      status: r.status || '',
+      note: r.note || '',
+      apartment: r.apartment || '',
+      phone: r.phone || '',
+      fullName: r.full_name || '',
+      email: r.email || '',
+      role: r.role || '',
+      constructionType: r.construction_type || '',
+      description: r.description || '',
+      startDate: r.start_date || '',
+      endDate: r.end_date || ''
+    })));
+
+    // Resident info
     const residentRegs = await client.db('resident_info').collection('resident_info_registers').find({
       'owner.phone': phone,
       'owner.apartment': apartment
@@ -1662,10 +1898,42 @@ router.get('/api/registration-lookup', async (req, res) => {
       service: 'Đăng ký thông tin cư dân',
       created_at: r.created_at ? r.created_at.toLocaleString('vi-VN') : '',
       status: r.status || '',
-      note: ''
+      note: r.note || '',
+      resident_name: r.owner?.ownerName || '',
+      resident_phone: r.owner?.phone || '',
+      resident_apartment: r.owner?.apartment || ''
     })));
 
     await client.close();
+    // Sort strictly by created_at (newest first), regardless of service type
+    results.sort((a, b) => {
+      // Parse created_at as timestamp (prefer ISO, fallback to 0)
+      const parseDate = (val) => {
+        if (!val) return 0;
+        // If already a Date, return timestamp
+        if (val instanceof Date) return val.getTime();
+        // If string, try parse (handle dd/mm/yyyy, dd-mm-yyyy, and ISO)
+        // Try ISO first
+        let d = new Date(val);
+        if (!isNaN(d.getTime())) return d.getTime();
+        // Try dd/mm/yyyy hh:mm:ss
+        if (typeof val === 'string') {
+          const parts = val.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})(?:[ ,T](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+          if (parts) {
+            const day = parseInt(parts[1], 10);
+            const month = parseInt(parts[2], 10) - 1;
+            const year = parseInt(parts[3], 10);
+            const hour = parseInt(parts[4] || '0', 10);
+            const min = parseInt(parts[5] || '0', 10);
+            const sec = parseInt(parts[6] || '0', 10);
+            d = new Date(year, month, day, hour, min, sec);
+            if (!isNaN(d.getTime())) return d.getTime();
+          }
+        }
+        return 0;
+      };
+      return parseDate(b.created_at) - parseDate(a.created_at);
+    });
     res.json({ success: true, results });
   } catch (err) {
     console.error('Error in registration lookup:', err);
@@ -1678,103 +1946,53 @@ router.get('/api/registration-lookup', async (req, res) => {
 
 // API tá»•ng há»£p danh sÃ¡ch Ä‘Äƒng kÃ½ dá»‹ch vá»¥ cho tenant-dashboard (láº¥y táº¥t cáº£ collection liÃªn quan)
 router.get('/tenant/api/registrations', async (req, res) => {
-  // Lấy tham số ngày và phân trang
-  let { fromDate, toDate, page = 1, limit = 20 } = req.query;
-  // Log toàn bộ query string để kiểm tra frontend gửi gì lên
-  console.log('[API /tenant/api/registrations] req.query:', req.query);
   const tenantId = req.tenant_id;
   if (!tenantId) return res.json([]);
   const client = new MongoClient(mongoUri);
   try {
     await client.connect();
-    // Lấy tham số ngày và phân trang
-    let { fromDate, toDate, page = 1, limit = 20 } = req.query;
-    page = parseInt(page) || 1;
-    limit = parseInt(limit) || 20;
-    let dateFilter = {};
-    if (fromDate) {
-      const from = new Date(fromDate);
-      from.setHours(0,0,0,0);
-      dateFilter.$gte = from;
-    }
-    if (toDate) {
-      const to = new Date(toDate);
-      to.setHours(23,59,59,999);
-      dateFilter.$lte = to;
-    }
-    function buildFilter(base) {
-      if (Object.keys(dateFilter).length > 0) {
-        return { ...base, created_at: dateFilter };
-      }
-      return base;
-    }
     // Car registrations
-    const carRegs = await client.db('car_registrations').collection('registrations').find(buildFilter({ tenant_id: tenantId })).toArray();
-    const carRemake = await client.db('car_registrations').collection('remake_requests').find(buildFilter({ tenant_id: tenantId })).toArray();
-    const carCancel = await client.db('car_registrations').collection('cancel_requests').find(buildFilter({ tenant_id: tenantId })).toArray();
-    const carUpdate = await client.db('car_registrations').collection('update_requests').find(buildFilter({ tenant_id: tenantId })).toArray();
+    const carRegs = await client.db('car_registrations').collection('registrations').find({ tenant_id: tenantId }).toArray();
+    const carRemake = await client.db('car_registrations').collection('remake_requests').find({ tenant_id: tenantId }).toArray();
+    const carCancel = await client.db('car_registrations').collection('cancel_requests').find({ tenant_id: tenantId }).toArray();
+    const carUpdate = await client.db('car_registrations').collection('update_requests').find({ tenant_id: tenantId }).toArray();
     // Utility card
     const utilityCards = await client.db('utility_card').collection('utility_cards').find({ apartment: { $exists: true }, fullName: { $exists: true } }).toArray();
-    const elevatorCards = await client.db('utility_card').collection('elevator_cards').find(buildFilter({ tenant_id: tenantId })).toArray();
-    const elevatorCancel = await client.db('utility_card').collection('elevator_cancel_requests').find(buildFilter({ tenant_id: tenantId })).toArray();
-    const poolRegisters = await client.db('utility_card').collection('pool_registers').find(buildFilter({ tenant_id: tenantId })).toArray();
+    const elevatorCards = await client.db('utility_card').collection('elevator_cards').find({ tenant_id: tenantId }).toArray();
+    const elevatorCancel = await client.db('utility_card').collection('elevator_cancel_requests').find({ tenant_id: tenantId }).toArray();
+    const poolRegisters = await client.db('utility_card').collection('pool_registers').find({ tenant_id: tenantId }).toArray();
     // Utility services
-    const advertisingRegs = await client.db('utility_services').collection('advertising_registers').find(buildFilter({ tenant_id: tenantId })).toArray();
-    const petsRegs = await client.db('utility_services').collection('pets_commitment_register').find(buildFilter({ tenant_id: tenantId })).toArray();
-    const communityRoomRegs = await client.db('utility_services').collection('community_room_registers').find(buildFilter({ tenant_id: tenantId })).toArray();
-    const cameraCheckRegs = await client.db('utility_services').collection('camera_check_requests').find(buildFilter({ tenant_id: tenantId })).toArray();
+    const advertisingRegs = await client.db('utility_services').collection('advertising_registers').find({ tenant_id: tenantId }).toArray();
+    const petsRegs = await client.db('utility_services').collection('pets_commitment_register').find({ tenant_id: tenantId }).toArray();
+    const communityRoomRegs = await client.db('utility_services').collection('community_room_registers').find({ tenant_id: tenantId }).toArray();
+    const cameraCheckRegs = await client.db('utility_services').collection('camera_check_requests').find({ tenant_id: tenantId }).toArray();
     // Moving service
-    const movingRegs = await client.db('moving_service').collection('moving_service_registers').find(buildFilter({ tenant_id: tenantId })).toArray();
+    const movingRegs = await client.db('moving_service').collection('moving_service_registers').find({ tenant_id: tenantId }).toArray();
     // Construction
-    const constructionRegs = await client.db('construction_service').collection('construction_registers').find(buildFilter({ tenant_id: tenantId })).toArray();
+    const constructionRegs = await client.db('construction_service').collection('construction_registers').find({ tenant_id: tenantId }).toArray();
     // Resident info
-    const residentRegs = await client.db('resident_info').collection('resident_info_registers').find(buildFilter({ tenant_id: tenantId })).toArray();
-    // Gộp và chuẩn hóa dữ liệu
+    const residentRegs = await client.db('resident_info').collection('resident_info_registers').find({ tenant_id: tenantId }).toArray();
+    // Gá»™p vÃ  chuáº©n hÃ³a dá»¯ liá»‡u
     const all = [
-      ...carRegs.map(r => ({ ...r, service_name: 'Thẻ Xe', registration_type: 'Đăng ký', file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/car-registrations/${r.cccd_files[0]}` : '' })),
-      ...carRemake.map(r => ({ ...r, service_name: 'Thẻ Xe', registration_type: 'Làm lại thẻ', file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/car-registrations/${r.cccd_files[0]}` : '' })),
-      ...carCancel.map(r => ({ ...r, service_name: 'Thẻ Xe', registration_type: 'Hủy thẻ', file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/car-cancel/${r.cccd_files[0]}` : '' })),
-      ...carUpdate.map(r => ({ ...r, service_name: 'Thẻ Xe', registration_type: 'Thay đổi thông tin', file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/car-update/${r.cccd_files[0]}` : '' })),
-      ...utilityCards.filter(r => r.fullName && r.apartment).map(r => ({ ...r, service_name: 'Thẻ Tiện Ích', registration_type: r.cardType || '', file_url: '' })),
-      ...elevatorCards.map(r => ({ ...r, service_name: 'Thẻ Thang Máy', registration_type: 'Đăng ký', file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/elevator-cards/${r.cccd_files[0]}` : '' })),
-      ...elevatorCancel.map(r => ({ ...r, service_name: 'Thẻ Thang Máy', registration_type: 'Hủy thẻ', file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/elevator-cancel/${r.cccd_files[0]}` : '' })),
-      ...poolRegisters.map(r => ({ ...r, service_name: 'Vòng Bơi', registration_type: 'Đăng ký', file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/pool-registers/${r.cccd_files[0]}` : '' })),
-      ...advertisingRegs.map(r => ({ ...r, service_name: 'Quảng Cáo', registration_type: r.ad_type || '', file_url: '' })),
-      ...petsRegs.map(r => ({ ...r, service_name: 'Vật Nuôi', registration_type: 'Cam kết', file_url: r.pet_info?.pet_image ? `/minio/pets-commitment-register/${r.pet_info.pet_image}` : '' })),
-      ...communityRoomRegs.map(r => ({ ...r, service_name: 'Phòng SHCĐ', registration_type: 'Đăng ký', file_url: '' })),
-      ...cameraCheckRegs.map(r => ({ ...r, service_name: 'Kiểm Tra Camera', registration_type: 'Yêu cầu', file_url: '' })),
-      ...movingRegs.map(r => ({ ...r, service_name: 'Vận Chuyển', registration_type: 'Đăng ký', file_url: '' })),
-      ...constructionRegs.map(r => ({ ...r, service_name: 'Thi Công Nhẹ', registration_type: r.construction_type || '', file_url: '' })),
-      ...residentRegs.map(r => ({ ...r, service_name: 'Thông Tin Cư Dân', registration_type: 'Cập nhật', file_url: '' }))
+      ...carRegs.map(r => ({ ...r, service_name: 'Tháº» Xe', registration_type: 'ÄÄƒng kÃ½', file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/car-registrations/${r.cccd_files[0]}` : '' })),
+      ...carRemake.map(r => ({ ...r, service_name: 'Tháº» Xe', registration_type: 'LÃ m láº¡i tháº»', file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/car-registrations/${r.cccd_files[0]}` : '' })),
+      ...carCancel.map(r => ({ ...r, service_name: 'Tháº» Xe', registration_type: 'Há»§y tháº»', file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/car-cancel/${r.cccd_files[0]}` : '' })),
+      ...carUpdate.map(r => ({ ...r, service_name: 'Tháº» Xe', registration_type: 'Thay Ä‘á»•i thÃ´ng tin', file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/car-update/${r.cccd_files[0]}` : '' })),
+      ...utilityCards.filter(r => r.fullName && r.apartment).map(r => ({ ...r, service_name: 'Tháº» Tiá»‡n Ãch', registration_type: r.cardType || '', file_url: '' })),
+      ...elevatorCards.map(r => ({ ...r, service_name: 'Tháº» Thang MÃ¡y', registration_type: 'ÄÄƒng kÃ½', file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/elevator-cards/${r.cccd_files[0]}` : '' })),
+      ...elevatorCancel.map(r => ({ ...r, service_name: 'Tháº» Thang MÃ¡y', registration_type: 'Há»§y tháº»', file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/elevator-cancel/${r.cccd_files[0]}` : '' })),
+      ...poolRegisters.map(r => ({ ...r, service_name: 'VÃ²ng BÆ¡i', registration_type: 'ÄÄƒng kÃ½', file_url: (r.cccd_files && r.cccd_files[0]) ? `/minio/pool-registers/${r.cccd_files[0]}` : '' })),
+      ...advertisingRegs.map(r => ({ ...r, service_name: 'Quáº£ng CÃ¡o', registration_type: r.ad_type || '', file_url: '' })),
+      ...petsRegs.map(r => ({ ...r, service_name: 'Váº­t NuÃ´i', registration_type: 'Cam káº¿t', file_url: r.pet_info?.pet_image ? `/minio/pets-commitment-register/${r.pet_info.pet_image}` : '' })),
+      ...communityRoomRegs.map(r => ({ ...r, service_name: 'PhÃ²ng SHCÄ', registration_type: 'ÄÄƒng kÃ½', file_url: '' })),
+      ...cameraCheckRegs.map(r => ({ ...r, service_name: 'Kiá»ƒm Tra Camera', registration_type: 'YÃªu cáº§u', file_url: '' })),
+      ...movingRegs.map(r => ({ ...r, service_name: 'Váº­n Chuyá»ƒn', registration_type: 'ÄÄƒng kÃ½', file_url: '' })),
+      ...constructionRegs.map(r => ({ ...r, service_name: 'Thi CÃ´ng Nháº¹', registration_type: r.construction_type || '', file_url: '' })),
+      ...residentRegs.map(r => ({ ...r, service_name: 'ThÃ´ng Tin CÆ° DÃ¢n', registration_type: 'Cáº­p nháº­t', file_url: '' }))
     ];
-    // Lọc lại theo ngày tạo (nếu có fromDate/toDate) trên toàn bộ dữ liệu đã gộp
-    let filteredAll = all;
-    if (Object.keys(dateFilter).length > 0) {
-      filteredAll = all.filter(item => {
-        if (!item.created_at) return false;
-        const d = new Date(item.created_at);
-        if (dateFilter.$gte && d < dateFilter.$gte) return false;
-        if (dateFilter.$lte && d > dateFilter.$lte) return false;
-        return true;
-      });
-    }
-    // Sắp xếp theo ngày tạo mới nhất
-    filteredAll.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    // Phân trang
-    const totalRecords = filteredAll.length;
-    const totalPages = Math.ceil(totalRecords / limit);
-    const pagedData = filteredAll.slice((page - 1) * limit, page * limit);
-    res.json({
-      data: pagedData,
-      pagination: {
-        page,
-        limit,
-        totalPages,
-        totalRecords
-      }
-    });
+    res.json(all.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
   } catch (err) {
-    res.json({ data: [], pagination: { page: 1, limit: 20, totalPages: 1, totalRecords: 0 } });
+    res.json([]);
   } finally {
     await client.close();
   }

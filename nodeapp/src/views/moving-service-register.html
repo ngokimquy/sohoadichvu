@@ -93,7 +93,7 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>Đăng Ký Vận Chuyển Hàng Hóa Vào</h1>
+      <h1>Đăng Ký Vận Chuyển Hàng Hóa Vào,Ra</h1>
       <p>Điền thông tin để đăng ký vận chuyển hàng hóa vào chung cư</p>
     </div>
     <div class="form-container">
@@ -124,6 +124,14 @@
               <option value="Thành viên">Thành viên</option>
               <option value="Khách thuê">Khách thuê</option>
               <option value="Khác">Khác</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="movingType">Loại vận chuyển</label>
+            <select id="movingType" name="movingType" required>
+              <option value="">-- Chọn loại vận chuyển --</option>
+              <option value="Vận chuyển vào">Vận chuyển vào</option>
+              <option value="Vận chuyển ra">Vận chuyển ra</option>
             </select>
           </div>
         </div>
@@ -210,6 +218,7 @@
         phone: form.phone.value,
         email: form.email.value,
         role: form.role.value,
+        movingType: form.movingType.value,
         moveDate: form.moveDate.value,
         moveTime: form.moveTime.value,
         goodsDesc: form.goodsDesc.value,
