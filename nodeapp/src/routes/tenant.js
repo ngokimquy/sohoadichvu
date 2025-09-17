@@ -56,16 +56,21 @@ router.get('/test-car-upload', (req, res) => {
 router.get('/api/registrations', requireTenantLogin, async (req, res) => {
   try {
     console.log('API /api/registrations - tenant_id:', req.tenant_id); // debug
+    console.log('chung ta la anh em mot nha'); // debug
     
     // Lấy parameters cho pagination và filtering
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20; // 20 records per page
-    const skip = (page - 1) * limit;
-    const search = req.query.search || '';
-    const status = req.query.status || '';
-    const serviceType = req.query.serviceType || '';
-    const sortBy = req.query.sortBy || 'created_at';
-    const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
+  const page = parseInt(req.query.page) || 1;
+  let limit = parseInt(req.query.limit);
+  if (isNaN(limit) || limit < 0) limit = 20;
+  const showAll = limit === 0;
+  const skip = showAll ? 0 : (page - 1) * limit;
+  const search = req.query.search || '';
+  const status = req.query.status || '';
+  const serviceType = req.query.serviceType || '';
+  const fromDate = req.query.fromDate || '';
+  const toDate = req.query.toDate || '';
+  const sortBy = req.query.sortBy || 'created_at';
+  const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
     
     const client = new MongoClient(mongoUri);
     await client.connect();
@@ -96,6 +101,19 @@ router.get('/api/registrations', requireTenantLogin, async (req, res) => {
         // Add status filter
         if (status) {
           query.status = status;
+        }
+
+        // Add date range filter
+        if (fromDate || toDate) {
+          query.created_at = {};
+          if (fromDate) {
+            // Start of fromDate
+            query.created_at.$gte = new Date(fromDate + 'T00:00:00.000Z');
+          }
+          if (toDate) {
+            // End of toDate
+            query.created_at.$lte = new Date(toDate + 'T23:59:59.999Z');
+          }
         }
         
         // Count total records for this collection
@@ -180,13 +198,13 @@ router.get('/api/registrations', requireTenantLogin, async (req, res) => {
       return 0;
     });
     
-    // Apply pagination to sorted results
-    const paginatedResults = allRegistrations.slice(skip, skip + limit);
-    
-    console.log(`Tổng số bản ghi: ${allRegistrations.length}, Trang ${page}, Hiển thị: ${paginatedResults.length}`); // debug
-    
-    // Convert file names thành full URLs
-    const result = paginatedResults.map(r => {
+  // Apply pagination to sorted results
+  const paginatedResults = showAll ? allRegistrations : allRegistrations.slice(skip, skip + limit);
+
+  console.log(`Tổng số bản ghi: ${allRegistrations.length}, Trang ${page}, Hiển thị: ${paginatedResults.length}`); // debug
+
+  // Convert file names thành full URLs
+  const result = paginatedResults.map(r => {
       const formattedReg = { ...r };
       
       // Convert các file fields thành full URLs
@@ -245,11 +263,11 @@ router.get('/api/registrations', requireTenantLogin, async (req, res) => {
       data: result,
       pagination: {
         currentPage: page,
-        totalPages: Math.ceil(allRegistrations.length / limit),
+        totalPages: showAll ? 1 : Math.ceil(allRegistrations.length / limit),
         totalRecords: allRegistrations.length,
-        recordsPerPage: limit,
-        hasNextPage: page < Math.ceil(allRegistrations.length / limit),
-        hasPrevPage: page > 1
+        recordsPerPage: showAll ? allRegistrations.length : limit,
+        hasNextPage: showAll ? false : page < Math.ceil(allRegistrations.length / limit),
+        hasPrevPage: showAll ? false : page > 1
       },
       filters: {
         search,

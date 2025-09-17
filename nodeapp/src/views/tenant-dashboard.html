@@ -146,6 +146,47 @@
       }
     }
   </style>
+  <script>
+
+    function downloadExcel() {
+      if (!_regs || !_regs.length) {
+        showNotification('Không có dữ liệu để xuất!', 'error');
+        return;
+      }
+      // Map status to Vietnamese
+      const statusMap = {
+        'pending': 'Đang chờ',
+        'approved': 'Đã phê duyệt',
+        'completed': 'Đã hoàn thành',
+        'rejected': 'Từ chối',
+        'cancelled': 'Hủy bỏ'
+      };
+      // Prepare data for export
+      const data = _regs.map(r => ({
+        'Dịch vụ': r.service_name || '',
+        'Người đăng ký': r.user_name || r.fullName || r.owner?.ownerName || r.personal_info?.full_name || r.full_name || r.owner_name || r.ten || r.name || '',
+        'Số điện thoại': r.user_phone || r.phone || r.owner?.phone || r.personal_info?.phone || r.sdt || r.mobile || '',
+        'Căn hộ': r.apartment || r.owner?.apartment || r.personal_info?.apartment || '',
+        'Thời gian': r.created_at ? new Date(r.created_at).toLocaleString('vi-VN') : '',
+        'Trạng thái': statusMap[r.status] || 'Đang chờ'
+      }));
+      // Create worksheet and workbook
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Đăng ký dịch vụ');
+      // Set column widths for better readability
+      ws['!cols'] = [
+        { wch: 20 }, // Dịch vụ
+        { wch: 22 }, // Người đăng ký
+        { wch: 16 }, // Số điện thoại
+        { wch: 14 }, // Căn hộ
+        { wch: 22 }, // Thời gian
+        { wch: 16 }  // Trạng thái
+      ];
+      // Export to file (UTF-8, .xlsx)
+      XLSX.writeFile(wb, 'dang-ky-dich-vu.xlsx', { bookType: 'xlsx', type: 'binary', compression: true });
+    }
+  </script>
 </head>
 <body>
   <div class="dashboard-layout">
@@ -213,12 +254,21 @@
               </select>
             </div>
             <div>
+              <label style="display:block;margin-bottom:5px;font-weight:bold;color:#333;">Từ ngày:</label>
+              <input type="date" id="fromDateFilter" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:5px;font-weight:bold;color:#333;">Đến ngày:</label>
+              <input type="date" id="toDateFilter" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">
+            </div>
+            <div>
               <label style="display:block;margin-bottom:5px;font-weight:bold;color:#333;">Số bản ghi:</label>
               <select id="limitFilter" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">
                 <option value="10">10 bản ghi</option>
                 <option value="20" selected>20 bản ghi</option>
                 <option value="50">50 bản ghi</option>
                 <option value="100">100 bản ghi</option>
+                <option value="0">Tất cả bản ghi</option>
               </select>
             </div>
           </div>
@@ -226,7 +276,10 @@
             <button onclick="applyFilters()" style="background:#7C3AED;color:white;border:none;padding:10px 20px;border-radius:4px;cursor:pointer;">🔍 Tìm kiếm</button>
             <button onclick="clearFilters()" style="background:#6c757d;color:white;border:none;padding:10px 20px;border-radius:4px;cursor:pointer;">🗑️ Xóa bộ lọc</button>
             <button onclick="refreshData()" style="background:#28a745;color:white;border:none;padding:10px 20px;border-radius:4px;cursor:pointer;">🔄 Làm mới</button>
+            <button onclick="downloadExcel()" style="background:#1d6f42;color:white;border:none;padding:10px 20px;border-radius:4px;cursor:pointer;">⬇️ Tải Excel</button>
           </div>
+    
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
         </div>
 
         <!-- Loading indicator -->
@@ -238,6 +291,7 @@
         <table class="reg-table" id="regTable">
           <thead>
             <tr>
+              <th>STT</th>
               <th>Dịch vụ</th>
               <th>Người đăng ký</th>
               <th>Số điện thoại</th>
@@ -575,6 +629,8 @@
       search: '',
       status: '',
       serviceType: '',
+      fromDate: '',
+      toDate: '',
       limit: 20
     };
     
@@ -597,29 +653,39 @@
     async function fetchRegistrations(page = 1) {
       try {
         showLoading(true);
+        // If limit is 0 (all), always use page=1
+        if (_filters.limit === 0) page = 1;
         _currentPage = page;
-        
+
         const params = new URLSearchParams({
           page: page,
           limit: _filters.limit,
           search: _filters.search,
           status: _filters.status,
           serviceType: _filters.serviceType,
+          fromDate: _filters.fromDate,
+          toDate: _filters.toDate,
           sortBy: _currentSort.field,
           sortOrder: _currentSort.order
         });
-        
+
         const response = await fetch(`/tenant/api/registrations?${params}`);
         const result = await response.json();
-        
+
         _regs = result.data || [];
         _totalPages = result.pagination?.totalPages || 1;
         _totalRecords = result.pagination?.totalRecords || 0;
-        
+
         renderRegTable(_regs);
-        renderPagination();
+        // Hide pagination if showing all records
+        if (_filters.limit === 0) {
+          document.getElementById('paginationSection').style.display = 'none';
+        } else {
+          document.getElementById('paginationSection').style.display = 'flex';
+          renderPagination();
+        }
         updateRecordInfo();
-        
+
       } catch (error) {
         console.error('Error fetching registrations:', error);
         showNotification('Lỗi tải dữ liệu', 'error');
@@ -639,7 +705,9 @@
       _filters.search = document.getElementById('searchInput').value.trim();
       _filters.status = document.getElementById('statusFilter').value;
       _filters.serviceType = document.getElementById('serviceFilter').value;
-      _filters.limit = parseInt(document.getElementById('limitFilter').value);
+      _filters.fromDate = document.getElementById('fromDateFilter').value;
+      _filters.toDate = document.getElementById('toDateFilter').value;
+  _filters.limit = parseInt(document.getElementById('limitFilter').value);
       
       fetchRegistrations(1); // Reset to page 1 when applying filters
     }
@@ -649,12 +717,16 @@
       document.getElementById('searchInput').value = '';
       document.getElementById('statusFilter').value = '';
       document.getElementById('serviceFilter').value = '';
-      document.getElementById('limitFilter').value = '20';
+      document.getElementById('fromDateFilter').value = '';
+      document.getElementById('toDateFilter').value = '';
+  document.getElementById('limitFilter').value = '20';
       
       _filters = {
         search: '',
         status: '',
         serviceType: '',
+        fromDate: '',
+        toDate: '',
         limit: 20
       };
       
@@ -762,12 +834,17 @@
     function renderRegTable(regs) {
       const body = document.getElementById('regTableBody');
       if (!body) return;
+      // Tính chỉ số bắt đầu cho STT
+      let startIdx = 0;
+      if (_filters.limit !== 0) {
+        startIdx = (_currentPage - 1) * _filters.limit;
+      }
       body.innerHTML = regs.map((r, idx) => {
         // Lấy tên người đăng ký
         let name = r.user_name || r.fullName || r.owner?.ownerName || r.personal_info?.full_name || r.full_name || r.owner_name || r.ten || r.name || '';
         // Lấy số điện thoại
         let phone = r.user_phone || r.phone || r.owner?.phone || r.personal_info?.phone || r.sdt || r.mobile || '';
-        
+
         // Tạo dropdown cho trạng thái
         const currentStatus = r.status || 'pending';
         const statusOptions = [
@@ -777,7 +854,7 @@
           { value: 'rejected', label: 'Từ chối', color: '#dc3545' },
           { value: 'cancelled', label: 'Hủy bỏ', color: '#6c757d' }
         ];
-        
+
         const statusDropdown = `
           <select onchange="updateStatus('${r._id}', this.value, '${r.service_name}', ${idx})" 
                   style="border:1px solid #ddd; border-radius:4px; padding:4px 8px; background:${statusOptions.find(s => s.value === currentStatus)?.color || '#ffc107'}; color:white; font-weight:bold;">
@@ -787,9 +864,10 @@
             ).join('')}
           </select>
         `;
-        
+
         return `
           <tr>
+            <td>${startIdx + idx + 1}</td>
             <td>${r.service_name||''}</td>
             <td>${name}</td>
             <td>${phone}</td>
