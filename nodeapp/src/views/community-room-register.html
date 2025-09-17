@@ -41,8 +41,22 @@
       grid-template-columns: 1fr 1fr;
       gap: 20px;
     }
+    .form-row-3col {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .form-row-3col .form-group label {
+      font-size: 14px;
+      min-width: 80px;
+      margin-bottom: 6px;
+    }
     @media (max-width: 768px) {
       .form-row {
+        grid-template-columns: 1fr;
+      }
+      .form-row-3col {
         grid-template-columns: 1fr;
       }
     }
@@ -131,7 +145,244 @@
       </form>
     </div>
   </div>
-  <script src="/static/js/community-room-register.js"></script>
+  
+  <script>
+    // Signature canvas variables
+    let canvas, ctx, isDrawing = false;
+    let isSubmitting = false;
+
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      canvas = document.getElementById('signatureCanvas');
+      ctx = canvas.getContext('2d');
+      
+      // Set line style
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      // Mouse events for desktop
+      canvas.addEventListener('mousedown', startDrawing);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', stopDrawing);
+      canvas.addEventListener('mouseout', stopDrawing);
+
+      // Touch events for mobile
+      canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+      canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+      canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+      // Set initial canvas size
+      resizeSignatureCanvas();
+    });
+
+    // Mouse drawing functions
+    function startDrawing(e) {
+      isDrawing = true;
+      const rect = canvas.getBoundingClientRect();
+      ctx.beginPath();
+      ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      const rect = canvas.getBoundingClientRect();
+      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctx.stroke();
+    }
+
+    function stopDrawing() {
+      isDrawing = false;
+    }
+
+    // Touch drawing functions for mobile
+    function handleTouchStart(e) {
+      e.preventDefault(); // Prevent scrolling
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      isDrawing = true;
+      ctx.beginPath();
+      ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+    }
+
+    function handleTouchMove(e) {
+      e.preventDefault(); // Prevent scrolling
+      if (!isDrawing) return;
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+      ctx.stroke();
+    }
+
+    function handleTouchEnd(e) {
+      e.preventDefault();
+      isDrawing = false;
+    }
+
+    // Clear signature
+    function clearSignature() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Check if canvas has signature
+    function isCanvasSigned(canvas) {
+      const canvasData = canvas.toDataURL();
+      const blankCanvas = document.createElement('canvas');
+      blankCanvas.width = canvas.width;
+      blankCanvas.height = canvas.height;
+      const blankData = blankCanvas.toDataURL();
+      return canvasData !== blankData;
+    }
+
+    // Form submission
+    document.getElementById('communityRoomForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      if (isSubmitting) return;
+      
+      const submitBtn = document.querySelector('button[type="submit"]');
+      isSubmitting = true;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Đang gửi...';
+
+      // Validate signature
+      if (!isCanvasSigned(canvas)) {
+        alert('Vui lòng ký tên xác nhận!');
+        isSubmitting = false;
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Gửi Đăng Ký';
+        return;
+      }
+
+      try {
+        // Create FormData
+        const formData = new FormData(this);
+        const signatureData = canvas.toDataURL();
+        formData.append('signature', signatureData);
+
+        const response = await fetch('/api/community-room-register', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          
+          // Get form data for success popup
+          const fullName = document.getElementById('fullName').value;
+          const phone = document.getElementById('phone').value;
+          const email = document.getElementById('email').value;
+          const apartment = document.getElementById('apartment').value;
+          const purpose = document.getElementById('purpose').value;
+          const date = document.getElementById('date').value;
+          const time = document.getElementById('time').value;
+          const attendees = document.getElementById('attendees').value;
+
+          showSuccessPopup({
+            fullName, phone, email, apartment, purpose, date, time, attendees,
+            chungcuName: result.chungcuName,
+            createdAt: result.createdAt
+          });
+        } else {
+          alert('Có lỗi xảy ra khi gửi đăng ký. Vui lòng thử lại.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Có lỗi xảy ra. Vui lòng thử lại.');
+      } finally {
+        isSubmitting = false;
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Gửi Đăng Ký';
+      }
+    });
+
+    // Success popup
+    function showSuccessPopup(info) {
+      const popup = document.createElement('div');
+      popup.id = 'successPopup';
+      popup.style = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);z-index:2000;display:flex;align-items:center;justify-content:center;';
+      
+      let dateStr = '';
+      if (info.createdAt) {
+        try {
+          const d = new Date(info.createdAt);
+          dateStr = d.toLocaleString('vi-VN', { hour12: false });
+        } catch (e) { 
+          dateStr = info.createdAt; 
+        }
+      }
+
+      popup.innerHTML = `
+        <div id="popupContent" style="background:#fff;padding:32px 28px 24px 28px;border-radius:12px;max-width:420px;width:95%;box-shadow:0 8px 32px rgba(9,132,227,0.10);text-align:center;">
+          <div style="font-size:2.2em;color:#28a745;margin-bottom:12px;">✔️</div>
+          <div style="font-size:1.3em;font-weight:700;color:#0984e3;margin-bottom:10px;">Đăng ký thành công!</div>
+          <div style="font-size:1.1em;font-weight:600;color:#333;margin-bottom:8px;">${info.chungcuName ? 'Chung cư: ' + info.chungcuName : ''}</div>
+          <div style="font-size:1em;color:#555;margin-bottom:8px;">${dateStr ? 'Ngày đăng ký: ' + dateStr : ''}</div>
+          <div style="text-align:left;font-size:1em;margin-bottom:12px;">
+            <b>Họ tên:</b> ${info.fullName}<br>
+            <b>Số điện thoại:</b> ${info.phone}<br>
+            <b>Email:</b> ${info.email || 'Không có'}<br>
+            <b>Căn hộ:</b> ${info.apartment}<br>
+            <b>Mục đích:</b> ${info.purpose}<br>
+            <b>Ngày sử dụng:</b> ${info.date}<br>
+            <b>Khung giờ:</b> ${info.time}<br>
+            <b>Số người tham dự:</b> ${info.attendees}
+          </div>
+          <div style="margin-top:20px;">
+            <button onclick="downloadRegistrationInfo()" style="background:#0984e3;color:white;border:none;padding:10px 20px;border-radius:5px;margin-right:10px;cursor:pointer;">Tải ảnh</button>
+            <button onclick="closeSuccessPopup()" style="background:#6c757d;color:white;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;">Đóng</button>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(popup);
+    }
+
+    function closeSuccessPopup() {
+      const popup = document.getElementById('successPopup');
+      if (popup) popup.remove();
+      window.location.href = '/tenants';
+    }
+
+    function downloadRegistrationInfo() {
+      const popupContent = document.getElementById('popupContent');
+      if (!popupContent) return;
+      html2canvas(popupContent).then(function(canvas) {
+        const link = document.createElement('a');
+        link.download = 'dang-ky-phong-sinh-hoat-cong-dong.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+
+    // Responsive canvas size
+    function resizeSignatureCanvas() {
+      const canvas = document.getElementById('signatureCanvas');
+      if (!canvas) return;
+      
+      let w = 400, h = 200;
+      if (window.innerWidth < 600) {
+        w = Math.max(window.innerWidth - 80, 280);
+        h = 320;
+      }
+      canvas.width = w;
+      canvas.height = h;
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
+      
+      // Re-initialize context after resize
+      if (ctx) {
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+      }
+    }
+
+    window.addEventListener('resize', resizeSignatureCanvas);
+  </script>
+  
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </body>
 </html>
