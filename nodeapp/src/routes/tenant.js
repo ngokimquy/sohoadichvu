@@ -25,14 +25,22 @@ router.get('/login', (req, res) => {
 // Xử lý login (giả lập, cần thay thế bằng xác thực thực tế)
 router.post('/login', express.urlencoded({ extended: true }), async (req, res) => {
   const { username, password } = req.body;
-  // TODO: Kiểm tra username, password với DB
-  // Ví dụ: nếu đúng thì lưu tenant_id vào session
-  if (username && password) {
-    // Giả lập: tenant_id = username
-    req.session.tenant_id = username;
-    return res.redirect('/tenant/dashboard');
+  try {
+    const client = new MongoClient(mongoUri);
+    await client.connect();
+    // Kiểm tra tài khoản trong collection tenant_users bên trong DB admin
+    const user = await client.db('admin').collection('tenant_users').findOne({ username, password });
+    await client.close();
+    if (user) {
+      req.session.tenant_id = user.tenant_id || username;
+      return res.redirect('/tenant/dashboard');
+    } else {
+      return res.redirect('/tenant/login?error=1');
+    }
+  } catch (err) {
+    console.error('Lỗi đăng nhập tenant:', err);
+    return res.redirect('/tenant/login?error=1');
   }
-  res.redirect('/tenant/login?error=1');
 });
 
 // Trang dashboard (chỉ cho phép khi đã đăng nhập)
