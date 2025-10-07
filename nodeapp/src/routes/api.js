@@ -1,4 +1,5 @@
-﻿
+﻿const Jimp = require('jimp');
+
 // API tra cứu thông tin đăng ký dịch vụ đã đăng ký (GET /api/registration-lookup)
 
 
@@ -562,13 +563,39 @@ router.post('/api/car-registration', upload.fields([
     const cccdFileUrls = [];
     for (const file of cccdFiles) {
       const fileName = generateUniqueFileName(tenantId, 'cccd', file.originalname);
-      await minioClient.putObject(bucketName, fileName, file.buffer, file.size);
+      // Xử lý nén và giảm độ phân giải bằng Jimp
+      const image = await Jimp.read(file.buffer);
+      image.resize(1024, Jimp.AUTO); // Resize về max width 1024px
+      const mime = image.getMIME();
+  let quality = 30;
+      let buffer;
+      if (mime === Jimp.MIME_JPEG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_JPEG);
+      } else if (mime === Jimp.MIME_PNG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_PNG);
+      } else {
+        buffer = await image.getBufferAsync(mime);
+      }
+      await minioClient.putObject(bucketName, fileName, buffer, buffer.length);
       cccdFileUrls.push(fileName);
     }
     const cavetFileUrls = [];
     for (const file of cavetFiles) {
       const fileName = generateUniqueFileName(tenantId, 'cavet', file.originalname);
-      await minioClient.putObject(bucketName, fileName, file.buffer, file.size);
+      // Xử lý nén và giảm độ phân giải bằng Jimp
+      const image = await Jimp.read(file.buffer);
+      image.resize(1024, Jimp.AUTO);
+      const mime = image.getMIME();
+  let quality = 30;
+      let buffer;
+      if (mime === Jimp.MIME_JPEG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_JPEG);
+      } else if (mime === Jimp.MIME_PNG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_PNG);
+      } else {
+        buffer = await image.getBufferAsync(mime);
+      }
+      await minioClient.putObject(bucketName, fileName, buffer, buffer.length);
       cavetFileUrls.push(fileName);
     }
     // LÆ°u chá»¯ kÃ½
@@ -696,13 +723,37 @@ router.post('/api/car-remake', upload.fields([
     const cccdFileUrls = [];
     for (const file of cccdFiles) {
       const fileName = generateUniqueFileName(tenantId, 'cccd', file.originalname);
-      await minioClient.putObject(bucketName, fileName, file.buffer, file.size);
+      const image = await Jimp.read(file.buffer);
+      image.resize(1024, Jimp.AUTO);
+      const mime = image.getMIME();
+  let quality = 30;
+      let buffer;
+      if (mime === Jimp.MIME_JPEG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_JPEG);
+      } else if (mime === Jimp.MIME_PNG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_PNG);
+      } else {
+        buffer = await image.getBufferAsync(mime);
+      }
+      await minioClient.putObject(bucketName, fileName, buffer, buffer.length);
       cccdFileUrls.push(fileName);
     }
     const cavetFileUrls = [];
     for (const file of cavetFiles) {
       const fileName = generateUniqueFileName(tenantId, 'cavet', file.originalname);
-      await minioClient.putObject(bucketName, fileName, file.buffer, file.size);
+      const image = await Jimp.read(file.buffer);
+      image.resize(1024, Jimp.AUTO);
+      const mime = image.getMIME();
+  let quality = 30;
+      let buffer;
+      if (mime === Jimp.MIME_JPEG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_JPEG);
+      } else if (mime === Jimp.MIME_PNG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_PNG);
+      } else {
+        buffer = await image.getBufferAsync(mime);
+      }
+      await minioClient.putObject(bucketName, fileName, buffer, buffer.length);
       cavetFileUrls.push(fileName);
     }
     // LÆ°u chá»¯ kÃ½
@@ -809,13 +860,37 @@ router.post('/api/car-cancel', upload.fields([
     const cccdFileUrls = [];
     for (const file of cccdFiles) {
       const fileName = generateUniqueFileName(tenantId, 'cccd', file.originalname);
-      await minioClient.putObject(bucketName, fileName, file.buffer, file.size);
+      const image = await Jimp.read(file.buffer);
+      image.resize(1024, Jimp.AUTO);
+      const mime = image.getMIME();
+  let quality = 30;
+      let buffer;
+      if (mime === Jimp.MIME_JPEG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_JPEG);
+      } else if (mime === Jimp.MIME_PNG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_PNG);
+      } else {
+        buffer = await image.getBufferAsync(mime);
+      }
+      await minioClient.putObject(bucketName, fileName, buffer, buffer.length);
       cccdFileUrls.push(fileName);
     }
     const cavetFileUrls = [];
     for (const file of cavetFiles) {
       const fileName = generateUniqueFileName(tenantId, 'cavet', file.originalname);
-      await minioClient.putObject(bucketName, fileName, file.buffer, file.size);
+      const image = await Jimp.read(file.buffer);
+      image.resize(1024, Jimp.AUTO);
+      const mime = image.getMIME();
+  let quality = 30;
+      let buffer;
+      if (mime === Jimp.MIME_JPEG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_JPEG);
+      } else if (mime === Jimp.MIME_PNG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_PNG);
+      } else {
+        buffer = await image.getBufferAsync(mime);
+      }
+      await minioClient.putObject(bucketName, fileName, buffer, buffer.length);
       cavetFileUrls.push(fileName);
     }
     // LÆ°u chá»¯ kÃ½
@@ -921,13 +996,37 @@ router.post('/api/car-update', upload.fields([
     const cccdFileUrls = [];
     for (const file of cccdFiles) {
       const fileName = generateUniqueFileName(tenantId, 'cccd', file.originalname);
-      await minioClient.putObject(bucketName, fileName, file.buffer, file.size);
+      const image = await Jimp.read(file.buffer);
+      image.resize(1024, Jimp.AUTO);
+      const mime = image.getMIME();
+  let quality = 30;
+      let buffer;
+      if (mime === Jimp.MIME_JPEG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_JPEG);
+      } else if (mime === Jimp.MIME_PNG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_PNG);
+      } else {
+        buffer = await image.getBufferAsync(mime);
+      }
+      await minioClient.putObject(bucketName, fileName, buffer, buffer.length);
       cccdFileUrls.push(fileName);
     }
     const cavetFileUrls = [];
     for (const file of cavetFiles) {
       const fileName = generateUniqueFileName(tenantId, 'cavet', file.originalname);
-      await minioClient.putObject(bucketName, fileName, file.buffer, file.size);
+      const image = await Jimp.read(file.buffer);
+      image.resize(1024, Jimp.AUTO);
+      const mime = image.getMIME();
+  let quality = 30;
+      let buffer;
+      if (mime === Jimp.MIME_JPEG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_JPEG);
+      } else if (mime === Jimp.MIME_PNG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_PNG);
+      } else {
+        buffer = await image.getBufferAsync(mime);
+      }
+      await minioClient.putObject(bucketName, fileName, buffer, buffer.length);
       cavetFileUrls.push(fileName);
     }
     // LÆ°u chá»¯ kÃ½
@@ -1025,7 +1124,19 @@ router.post('/api/elevator-card-register', upload.fields([
     const cccdFileUrls = [];
     for (const file of cccdFiles) {
       const fileName = generateUniqueFileName(tenantId, 'cccd', file.originalname);
-      await minioClient.putObject(bucketName, fileName, file.buffer, file.size);
+      const image = await Jimp.read(file.buffer);
+      image.resize(1024, Jimp.AUTO);
+      const mime = image.getMIME();
+      let quality = 60;
+      let buffer;
+      if (mime === Jimp.MIME_JPEG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_JPEG);
+      } else if (mime === Jimp.MIME_PNG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_PNG);
+      } else {
+        buffer = await image.getBufferAsync(mime);
+      }
+      await minioClient.putObject(bucketName, fileName, buffer, buffer.length);
       cccdFileUrls.push(fileName);
     }
     // LÆ°u chá»¯ kÃ½ lÃªn MinIO
@@ -1115,7 +1226,19 @@ router.post('/api/elevator-card-cancel', upload.fields([
     const cccdFileUrls = [];
     for (const file of cccdFiles) {
       const fileName = generateUniqueFileName(tenantId, 'cccd', file.originalname);
-      await minioClient.putObject(bucketName, fileName, file.buffer, file.size);
+      const image = await Jimp.read(file.buffer);
+      image.resize(1024, Jimp.AUTO);
+      const mime = image.getMIME();
+      let quality = 60;
+      let buffer;
+      if (mime === Jimp.MIME_JPEG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_JPEG);
+      } else if (mime === Jimp.MIME_PNG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_PNG);
+      } else {
+        buffer = await image.getBufferAsync(mime);
+      }
+      await minioClient.putObject(bucketName, fileName, buffer, buffer.length);
       cccdFileUrls.push(fileName);
     }
     // LÆ°u chá»¯ kÃ½ lÃªn MinIO
@@ -1187,7 +1310,19 @@ router.post('/api/pool-register', upload.fields([
     const cccdFileUrls = [];
     for (const file of cccdFiles) {
       const fileName = generateUniqueFileName(tenantId, 'cccd', file.originalname);
-      await minioClient.putObject(bucketName, fileName, file.buffer, file.size);
+      const image = await Jimp.read(file.buffer);
+      image.resize(1024, Jimp.AUTO);
+      const mime = image.getMIME();
+      let quality = 60;
+      let buffer;
+      if (mime === Jimp.MIME_JPEG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_JPEG);
+      } else if (mime === Jimp.MIME_PNG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_PNG);
+      } else {
+        buffer = await image.getBufferAsync(mime);
+      }
+      await minioClient.putObject(bucketName, fileName, buffer, buffer.length);
       cccdFileUrls.push(fileName);
     }
     // LÆ°u chá»¯ kÃ½ lÃªn MinIO
@@ -1356,7 +1491,20 @@ router.post('/api/pets-commitment-register', upload.single('petImage'), async (r
       const bucketExists = await minioClient.bucketExists(bucketName);
       if (!bucketExists) await minioClient.makeBucket(bucketName);
       petImageFileName = generateUniqueFileName(tenantId, 'pet', req.file.originalname);
-      await minioClient.putObject(bucketName, petImageFileName, req.file.buffer);
+      // Nén và resize ảnh vật nuôi
+      const image = await Jimp.read(req.file.buffer);
+      image.resize(1024, Jimp.AUTO);
+      const mime = image.getMIME();
+  let quality = 30;
+      let buffer;
+      if (mime === Jimp.MIME_JPEG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_JPEG);
+      } else if (mime === Jimp.MIME_PNG) {
+        buffer = await image.quality(quality).getBufferAsync(Jimp.MIME_PNG);
+      } else {
+        buffer = await image.getBufferAsync(mime);
+      }
+      await minioClient.putObject(bucketName, petImageFileName, buffer, buffer.length);
     }
     // LÆ°u chá»¯ kÃ½ (base64) lÃªn MinIO
     let signatureFileName = '';
