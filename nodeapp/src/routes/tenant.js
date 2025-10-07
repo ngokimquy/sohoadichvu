@@ -28,11 +28,14 @@ router.post('/login', express.urlencoded({ extended: true }), async (req, res) =
   try {
     const client = new MongoClient(mongoUri);
     await client.connect();
+    // Lấy subdomain hiện tại
+    const host = req.headers.host || '';
+    const subdomain = host.split('.')[0];
     // Kiểm tra tài khoản trong collection tenant_users bên trong DB admin
     const user = await client.db('admin').collection('tenant_users').findOne({ username, password });
     await client.close();
-    if (user) {
-      req.session.tenant_id = user.tenant_id || username;
+    if (user && user.tenant_id === subdomain) {
+      req.session.tenant_id = user.tenant_id;
       return res.redirect('/tenant/dashboard');
     } else {
       return res.redirect('/tenant/login?error=1');
